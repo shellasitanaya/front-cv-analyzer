@@ -1,0 +1,75 @@
+.screening-page {
+  padding: 2rem 4rem;
+  background-color: #f0f2f5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.screening-page h1 {
+  font-size: 2rem;
+  color: #1f2937;
+}
+
+.screening-page > p {
+  color: #6b7280;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background-color: white;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.job-selection-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.job-select-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.job-select-wrapper label {
+  font-size: 0.9em;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.job-select-wrapper select {
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  min-width: 300px;
+}
+
+.job-requirements {
+  text-align: right;
+  color: #4b5563;
+}
+
+.job-requirements p {
+  margin: 0.25rem 0;
+  font-size: 0.9em;
+}
+
+/* Styling untuk Dropzone akan ditambahkan di sini nanti */
+.dropzone {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.dropzone.active {
+  border-color: #2563eb;
+}
+
+/* ... Tambahkan styling lain sesuai kebutuhan ... */
