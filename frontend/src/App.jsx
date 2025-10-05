@@ -1,9 +1,13 @@
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import UserTest from "./pages/UserTest";
 import HRTest from "./pages/HRTest";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/Login";
 import AdminLoginPage from "./pages/AdminLogin";
+// hr feature pages
+import HRDashboardPage from "./features/hr/DashboardPage";
+import ScreeningPage from "./features/hr/ScreeningPage";
 
 function Unauthorized() {
   return (
@@ -17,14 +21,12 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* Login Page */}
+        {/* ---------- AUTH PAGES ---------- */}
         <Route path="/" element={<LoginPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
-
-        {/* Unauthorized Page */}
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* User Test Page: accessible by user and admin */}
+        {/* ---------- TEST PAGES ---------- */}
         <Route
           path="/user-test"
           element={
@@ -33,8 +35,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* HR Test Page: accessible by hr and admin */}
         <Route
           path="/hr-test"
           element={
@@ -43,6 +43,34 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* ---------- HR PAGES ---------- */}
+        <Route
+          path="/hr-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["hr", "admin"]}>
+              <HRDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr-screening"
+          element={
+            <ProtectedRoute allowedRoles={["hr", "admin"]}>
+              <ScreeningPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ---------- ADMIN DASHBOARD (optional future route) ---------- */}
+        {/* <Route
+          path="/admin-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          }
+        /> */}
       </Routes>
     </Router>
   );
