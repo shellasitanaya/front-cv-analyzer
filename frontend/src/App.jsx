@@ -2,8 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import UserTest from "./pages/UserTest";
 import HRTest from "./pages/HRTest";
 import ProtectedRoute from "./components/ProtectedRoute";
-import LoginPage from "./components/LoginPage";
-
+import LoginPage from "./pages/Login";
+import AdminLoginPage from "./pages/AdminLogin";
 
 function Unauthorized() {
   return (
@@ -19,6 +19,7 @@ export default function App() {
       <Routes>
         {/* Login Page */}
         <Route path="/" element={<LoginPage />} />
+        <Route path="/admin-login" element={<AdminLoginPage />} />
 
         {/* Unauthorized Page */}
         <Route path="/unauthorized" element={<Unauthorized />} />

@@ -1,6 +1,11 @@
 // src/services/api.js
 const API_BASE_URL = "http://localhost:5000/api";
 
+// Endpoint paths
+export const Login = "/auth/login";
+export const Logout = "/auth/logout";
+// Add more paths if needed
+
 // ======== Helper ========
 function getToken() {
   return localStorage.getItem("token");
@@ -29,19 +34,10 @@ async function request(endpoint, { method = "GET", body, headers = {} } = {}) {
   return data;
 }
 
+// adjust as needed
 // ======== Auth API ========
 export const AuthAPI = {
-  login: (email, password) =>
-    request("/auth/login", {
-      method: "POST",
-      body: { email, password },
-    }),
-  logout: () => {
-    localStorage.removeItem("token");
-  },
-};
-
-// ======== User API ======== (adjust as needed)
-export const UserAPI = {
-  // getProfile: () => request("/user/profile"),
+  login: (email, password, role) =>
+    request(Login, { method: "POST", body: { email, password, role } }),
+  logout: () => localStorage.removeItem("token"),
 };
