@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './Dashboard.css'; // File CSS untuk styling
 import BulkUploadForm from './BulkUploadForm';
+import SearchBar from './SearchBar'; // Sesuaikan path jika perlu
+import CandidateCard from './CandidateCard';
 
 //================================================================
 // Komponen untuk Menampilkan Daftar Peringkat Kandidat
@@ -98,6 +100,7 @@ function CandidateProfileModal({ candidate, onClose }) {
 //================================================================
 function HRDashboardPage() {
     const [candidates, setCandidates] = useState([]);
+    const [filteredCandidates, setFilteredCandidates] = useState([]); 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -109,6 +112,7 @@ function HRDashboardPage() {
         try {
             const response = await axios.get(`${API_URL}/api/hr/jobs/501/candidates`);
             setCandidates(response.data);
+            setFilteredCandidates(response.data);
             setError(null); // Bersihkan error jika fetch berhasil
         } catch (err) {
             setError("Gagal memuat data kandidat. Pastikan server backend sudah berjalan.");
@@ -122,6 +126,26 @@ function HRDashboardPage() {
     useEffect(() => {
         fetchCandidates();
     }, [fetchCandidates]);
+    
+    const handleSearch = (query) => {
+        if (!query) {
+            setFilteredCandidates(candidates); // Jika query kosong, tampilkan semua
+            return;
+        }
+
+        const lowercasedQuery = query.toLowerCase();
+        const results = candidates.filter(candidate => {
+            // Logika pencarian sederhana (bisa dikembangkan)
+            const nameMatch = (candidate.extracted_name || candidate.name).toLowerCase().includes(lowercasedQuery);
+            const profile = typeof candidate.structured_profile_json === 'string' 
+                ? JSON.parse(candidate.structured_profile_json) 
+                : candidate.structured_profile_json;
+            const skillsMatch = profile?.skills?.some(skill => skill.toLowerCase().includes(lowercasedQuery));
+            
+            return nameMatch || skillsMatch;
+        });
+        setFilteredCandidates(results);
+    };
 
     // Fungsi ini akan dipanggil oleh BulkUploadForm setelah upload berhasil
     const handleUploadSuccess = () => {
@@ -152,23 +176,39 @@ function HRDashboardPage() {
 
     return (
         <div className="hr-dashboard">
-            {/* Panggil Komponen Form di sini */}
             <BulkUploadForm onUploadSuccess={handleUploadSuccess} />
+            
+            {/* BARU: Integrasi SearchBar */}
+            <div className="search-and-ranking-container">
+                <h2>Peringkat Kandidat untuk "Senior Software Engineer"</h2>
+                <p>Ditemukan {filteredCandidates.length} dari {candidates.length} total kandidat.</p>
+                
+                <SearchBar onSearch={handleSearch} />
 
-            {/* Tampilkan error jika ada */}
-            {error && <p className="error-message">{error}</p>}
-
-            {/* Tampilkan loading atau daftar ranking */}
-            {isLoading ? (
-                <div className="hr-dashboard-centered"><h2>Loading...</h2></div>
-            ) : (
-                <CandidateRankingList candidates={candidates} onViewProfile={handleViewProfile} />
-            )}
+                {/* MODIFIKASI: Ganti tabel dengan CandidateCard */}
+                <div className="candidate-list">
+                    {isLoading && <p>Refreshing data...</p>}
+                    {error && <p className="error-message">{error}</p>}
+                    
+                    {filteredCandidates.length > 0 ? (
+                        filteredCandidates
+                            .sort((a, b) => b.match_score - a.match_score) // Tetap urutkan berdasarkan skor
+                            .map(candidate => (
+                                <CandidateCard 
+                                    key={candidate.id} 
+                                    candidate={candidate} 
+                                    onViewProfile={() => handleViewProfile(candidate.id)}
+                                />
+                            ))
+                    ) : (
+                        <div className="no-results">
+                            <p>Tidak ada kandidat ditemukan yang cocok dengan kriteria Anda.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
 
             <CandidateProfileModal candidate={selectedCandidate} onClose={handleCloseModal} />
-
-            {/* <CandidateRankingList candidates={candidates} onViewProfile={handleViewProfile} />
-      <CandidateProfileModal candidate={selectedCandidate} onClose={handleCloseModal} /> */}
         </div>
     );
 }
