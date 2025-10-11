@@ -8,6 +8,7 @@ import AdminLoginPage from "./pages/AdminLogin";
 // hr feature pages
 import HRDashboardPage from "./features/hr/DashboardPage";
 import ScreeningPage from "./features/hr/ScreeningPage";
+import RankingPage from './features/hr/RankingPage';
 
 function Unauthorized() {
   return (
@@ -58,6 +59,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["hr", "admin"]}>
               <ScreeningPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr-ranking/:jobId"
+          element={
+            <ProtectedRoute allowedRoles={["hr", "admin"]}>
+              <RankingPage />
             </ProtectedRoute>
           }
         />

@@ -1,26 +1,20 @@
 // import React from 'react';
-// import HRDashboardPage from './features/hr/DashboardPage';
+// import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+// import ScreeningPage from './features/hr/ScreeningPage';
+// import RankingPage from './features/hr/RankingPage';
 
 // function App() {
 //   return (
-//     <div className="App">
-//       <HRDashboardPage />
-//     </div>
+//     <Router>
+//       <div className="App">
+//         <Routes>
+//           <Route path="/" element={<Navigate replace to="/hr-screening" />} />
+//           <Route path="/hr-screening" element={<ScreeningPage />} />
+//           <Route path="/hr-ranking/:jobId" element={<RankingPage />} />
+//         </Routes>
+//       </div>
+//     </Router>
 //   );
 // }
 
 // export default App;
-
-import React from 'react';
-// Pastikan path import ini benar sesuai lokasi file Anda
-import ScreeningPage from './features/hr/ScreeningPage';
-
-function App() {
-  return (
-    <div className="App">
-      <ScreeningPage />
-    </div>
-  );
-}
-
-export default App;
