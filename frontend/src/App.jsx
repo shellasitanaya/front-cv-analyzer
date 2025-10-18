@@ -6,7 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/Login";
 import AdminLoginPage from "./pages/AdminLogin";
 // hr feature pages
-import HRDashboardPage from "./features/hr/DashboardPage";
+// import HRDashboardPage from "./features/hr/DashboardPage";
 import ScreeningPage from "./features/hr/ScreeningPage";
 import RankingPage from './features/hr/RankingPage';
 
@@ -46,14 +46,14 @@ export default function App() {
         />
 
         {/* ---------- HR PAGES ---------- */}
-        <Route
+        {/* <Route
           path="/hr-dashboard"
           element={
             <ProtectedRoute allowedRoles={["hr", "admin"]}>
               <HRDashboardPage />
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/hr-screening"
           element={
