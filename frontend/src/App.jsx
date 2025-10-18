@@ -6,8 +6,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/Login";
 import AdminLoginPage from "./pages/AdminLogin";
 // hr feature pages
-import HRDashboardPage from "./features/hr/DashboardPage";
+// import HRDashboardPage from "./features/hr/DashboardPage";
 import ScreeningPage from "./features/hr/ScreeningPage";
+import RankingPage from './features/hr/RankingPage';
 // generate pages
 import FillData from "./pages/FillData";
 import PreviewCV from "./pages/PreviewCV";
@@ -48,19 +49,27 @@ export default function App() {
         />
 
         {/* ---------- HR PAGES ---------- */}
-        <Route
+        {/* <Route
           path="/hr-dashboard"
           element={
             <ProtectedRoute allowedRoles={["hr", "admin"]}>
               <HRDashboardPage />
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/hr-screening"
           element={
             <ProtectedRoute allowedRoles={["hr", "admin"]}>
               <ScreeningPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr-ranking/:jobId"
+          element={
+            <ProtectedRoute allowedRoles={["hr", "admin"]}>
+              <RankingPage />
             </ProtectedRoute>
           }
         />
