@@ -1,10 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}", // <-- INI YANG PALING PENTING
+    "./src/**/*.{js,jsx,ts,tsx}", // CRA source files
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['Montserrat', 'sans-serif'],
+      },
+    },
   },
   plugins: [],
 }
+

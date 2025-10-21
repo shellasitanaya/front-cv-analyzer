@@ -83,11 +83,12 @@ export default function App() {
             </ProtectedRoute>
           }
         /> */}
-      </Routes>
-      {/* generate pages route */}
-      <Routes>
+
+        {/* generate cv pages route */}
         <Route path="/fill-data" element={<FillData />} /> {/* Step 2: isi data */}
         <Route path="/preview" element={<PreviewCV />} /> {/* Step 3: preview */}
+
+
       </Routes>
     </Router>
   );
