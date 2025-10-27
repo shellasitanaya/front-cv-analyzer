@@ -8,6 +8,9 @@ import AdminLoginPage from "./pages/AdminLogin";
 // hr feature pages
 import HRDashboardPage from "./features/hr/DashboardPage";
 import ScreeningPage from "./features/hr/ScreeningPage";
+// generate pages
+import FillData from "./pages/FillData";
+import PreviewCV from "./pages/PreviewCV";
 
 function Unauthorized() {
   return (
@@ -71,6 +74,11 @@ export default function App() {
             </ProtectedRoute>
           }
         /> */}
+      </Routes>
+      {/* generate pages route */}
+      <Routes>
+        <Route path="/fill-data" element={<FillData />} /> {/* Step 2: isi data */}
+        <Route path="/preview" element={<PreviewCV />} /> {/* Step 3: preview */}
       </Routes>
     </Router>
   );

@@ -1,90 +1,65 @@
-import axios from "axios";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 
 function UserTest() {
-  const [candidateId, setCandidateId] = useState("");
-  const [downloadUrl, setDownloadUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  const handleGenerateCV = async () => {
-    if (!candidateId.trim()) {
-      alert("Masukkan Candidate ID terlebih dahulu!");
+  const templates = [
+    { id: "modern", name: "Modern", img: "/templates/modern.png" },
+    { id: "classic", name: "Classic", img: "/templates/classic.png" },
+    { id: "minimalist", name: "Minimalist", img: "/templates/minimalist.png" },
+  ];
+
+  const handleNext = () => {
+    if (!selectedTemplate) {
+      alert("Pilih template terlebih dahulu!");
       return;
     }
-
-    setLoading(true);
-    setDownloadUrl(null);
-
-    try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/cv/generate/${candidateId}`,
-        { responseType: "blob" }
-      );
-
-      // Buat blob object URL dari file PDF
-      const fileURL = window.URL.createObjectURL(new Blob([response.data]));
-      setDownloadUrl(fileURL);
-    } catch (error) {
-      console.error("Error generating CV:", error);
-      alert("❌ Failed to generate CV. Check Candidate ID or connection to backend.");
-    } finally {
-      setLoading(false);
-    }
+    navigate("/fill-data", { state: { template: selectedTemplate } });
   };
 
   return (
     <Layout>
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
-      <div className="bg-white shadow-md rounded-xl p-8 w-full max-w-lg">
-        <h2 className="text-2xl font-bold mb-4 text-center text-gray-700">
-          Generate Candidate CV
-        </h2>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
+        <div className="bg-white shadow-md rounded-xl p-8 w-full max-w-3xl">
+          <h2 className="text-3xl font-bold mb-6 text-center text-gray-700">
+            Pilih Template CV
+          </h2>
 
-        <div className="flex gap-2 mb-4">
-          <input
-            type="text"
-            placeholder="Enter Candidate ID"
-            value={candidateId}
-            onChange={(e) => setCandidateId(e.target.value)}
-            className="flex-1 border border-gray-300 p-2 rounded-md focus:outline-none focus:ring focus:ring-blue-200"
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            {templates.map((tpl) => (
+              <div
+                key={tpl.id}
+                className={`border rounded-lg p-4 cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                  selectedTemplate === tpl.id ? "border-blue-500" : "border-gray-300"
+                }`}
+                onClick={() => setSelectedTemplate(tpl.id)}
+              >
+                <img
+                  src={tpl.img}
+                  alt={tpl.name}
+                  className="w-full h-48 object-cover rounded-md mb-3"
+                />
+                <p className="text-center font-medium text-gray-600">{tpl.name}</p>
+              </div>
+            ))}
+          </div>
+
           <button
-            onClick={handleGenerateCV}
-            disabled={loading}
-            className={`px-4 py-2 rounded-md text-white ${
-              loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+            onClick={handleNext}
+            disabled={!selectedTemplate}
+            className={`w-full py-3 rounded-md text-white text-lg font-semibold ${
+              selectedTemplate
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-gray-400 cursor-not-allowed"
             }`}
           >
-            {loading ? "Generating..." : "Generate CV"}
+            Lanjut Isi Data
           </button>
         </div>
-
-        {downloadUrl && (
-          <>
-            <div className="text-center my-4">
-              <a
-                href={downloadUrl}
-                download={`Candidate_${candidateId}_CV.pdf`}
-                className="text-blue-600 underline font-medium"
-              >
-                ⬇️ Download CV PDF
-              </a>
-            </div>
-
-            <div className="border rounded-md overflow-hidden mt-4 shadow-inner">
-              <iframe
-                src={downloadUrl}
-                title="CV Preview"
-                width="100%"
-                height="600px"
-                className="border-none"
-              />
-            </div>
-          </>
-        )}
       </div>
-    </div>
     </Layout>
   );
 }
