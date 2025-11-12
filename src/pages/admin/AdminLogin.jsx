@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
-import { AuthAPI } from "../services/Api";
+import { AuthAPI } from "../../services/Api";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");

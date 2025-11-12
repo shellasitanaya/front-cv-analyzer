@@ -1,6 +1,6 @@
 import React from "react";
-import Layout from "../components/Layout";
-import SearchBar from "../features/hr/SearchBar";
+import Layout from "../../components/Layout";
+import SearchBar from "../../features/hr/SearchBar";
 
 export default function HRTest() {
   return (

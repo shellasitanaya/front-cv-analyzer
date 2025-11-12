@@ -18,7 +18,7 @@ export default function LoginPage() {
     if (token) {
       try {
         const payload = jwtDecode(token);
-        redirectByRole(payload.sub.role);
+        redirectByRole(payload.role);
       } catch {
         localStorage.removeItem("token");
       }
@@ -35,11 +35,13 @@ export default function LoginPage() {
     setError("");
     try {
       const data = await AuthAPI.login(email, password, role);
+      const token = data.access_token;
 
-      if (data.access_token) {
-        localStorage.setItem("token", data.access_token);
-        const payload = jwtDecode(data.access_token);
-        redirectByRole(payload.sub.role);
+      if (token) {
+        console.log(token);
+        localStorage.setItem("token", token);
+        const payload = jwtDecode(token);
+        redirectByRole(payload.role);
       }
 
     } catch (err) {

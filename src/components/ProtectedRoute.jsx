@@ -11,7 +11,7 @@ export default function ProtectedRoute({ allowedRoles, children }) {
 
   try {
     const payload = jwtDecode(token);
-    const userRole = payload.sub.role;
+    const userRole = payload.role;
 
     // Check if user role is allowed
     if (!allowedRoles.includes(userRole)) {
