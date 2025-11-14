@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Layout from "../components/Layout";
+import Layout from "../../components/Layout";
 
 function UserTest() {
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const templates = [
-    { id: "modern", name: "Modern", img: "/templates/modern.png" },
-    { id: "classic", name: "Classic", img: "/templates/classic.png" },
-    { id: "minimalist", name: "Minimalist", img: "/templates/minimalist.png" },
+    { id: "modern", name: "Modern", img: "/static/images/modern.png" },
+    { id: "classic", name: "Classic", img: "/static/images/classic.png" },
+    { id: "minimalist", name: "Minimalist", img: "/static/images/minimalist.png" },
   ];
 
   const handleNext = () => {

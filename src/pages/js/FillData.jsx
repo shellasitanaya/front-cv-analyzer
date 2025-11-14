@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import Layout from "../components/Layout";
+import Layout from "../../components/Layout";
 
 function FillData() {
   const navigate = useNavigate();
