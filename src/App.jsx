@@ -1,16 +1,26 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import UserTest from "./pages/UserTest";
-import HRTest from "./pages/HRTest";
+
+// Components
 import ProtectedRoute from "./components/ProtectedRoute";
+
+// Auth Pages
 import LoginPage from "./pages/Login";
-import AdminLoginPage from "./pages/AdminLogin";
-// hr feature pages
-import HRDashboardPage from "./features/hr/DashboardPage";
+import AdminLoginPage from "./pages/admin/AdminLogin";
+
+// User Pages
+import UserTest from "./pages/js/UserTest";
+import FillData from "./pages/js/FillData";
+import PreviewCV from "./pages/js/PreviewCV";
+
+// HR Pages
+import HRTest from "./pages/hr/HRTest";
 import ScreeningPage from "./features/hr/ScreeningPage";
-// generate pages
-import FillData from "./pages/FillData";
-import PreviewCV from "./pages/PreviewCV";
+import RankingPage from "./features/hr/RankingPage";
+import JobPosting from "./pages/hr/JobPosting";
+
+// Admin Pages (future expansion)
+// import AdminDashboardPage from "./pages/admin/AdminDashboard";
 
 function Unauthorized() {
   return (
@@ -24,12 +34,12 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* ---------- AUTH PAGES ---------- */}
+        {/* ---------- AUTHENTICATION ---------- */}
         <Route path="/" element={<LoginPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* ---------- TEST PAGES ---------- */}
+        {/* ---------- USER ROUTES ---------- */}
         <Route
           path="/user-test"
           element={
@@ -38,21 +48,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/fill-data" element={<FillData />} />
+        <Route path="/preview" element={<PreviewCV />} />
+
+        {/* ---------- HR ROUTES ---------- */}
         <Route
           path="/hr-test"
           element={
             <ProtectedRoute allowedRoles={["hr", "admin"]}>
               <HRTest />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ---------- HR PAGES ---------- */}
-        <Route
-          path="/hr-dashboard"
-          element={
-            <ProtectedRoute allowedRoles={["hr", "admin"]}>
-              <HRDashboardPage />
             </ProtectedRoute>
           }
         />
@@ -64,8 +68,24 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/hr-ranking/:jobId"
+          element={
+            <ProtectedRoute allowedRoles={["hr", "admin"]}>
+              <RankingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/create-job"
+          element={
+            <ProtectedRoute allowedRoles={["hr", "admin"]}>
+              <JobPosting />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* ---------- ADMIN DASHBOARD (optional future route) ---------- */}
+        {/* ---------- ADMIN ROUTES (optional) ---------- */}
         {/* <Route
           path="/admin-dashboard"
           element={
