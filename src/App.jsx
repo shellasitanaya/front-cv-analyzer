@@ -12,6 +12,7 @@ import AdminLoginPage from "./pages/admin/AdminLogin";
 import UserTest from "./pages/js/UserTest";
 import FillData from "./pages/js/FillData";
 import PreviewCV from "./pages/js/PreviewCV";
+import UserCVAnalysisPage from "./pages/UserCVAnalysisPage"; // ✅ PATH DIPERBAIKI
 
 // HR Pages
 import HRTest from "./pages/hr/HRTest";
@@ -41,6 +42,14 @@ export default function App() {
 
         {/* ---------- USER ROUTES ---------- */}
         <Route
+          path="/user-cv-analysis"
+          element={
+            <ProtectedRoute allowedRoles={["user", "hr", "admin"]}>
+              <UserCVAnalysisPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/user-test"
           element={
             <ProtectedRoute allowedRoles={["user", "admin"]}>
@@ -48,8 +57,22 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/fill-data" element={<FillData />} />
-        <Route path="/preview" element={<PreviewCV />} />
+        <Route 
+          path="/fill-data" 
+          element={
+            <ProtectedRoute allowedRoles={["user", "hr", "admin"]}>
+              <FillData />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/preview" 
+          element={
+            <ProtectedRoute allowedRoles={["user", "hr", "admin"]}>
+              <PreviewCV />
+            </ProtectedRoute>
+          } 
+        />
 
         {/* ---------- HR ROUTES ---------- */}
         <Route
@@ -94,11 +117,6 @@ export default function App() {
             </ProtectedRoute>
           }
         /> */}
-      </Routes>
-      {/* generate pages route */}
-      <Routes>
-        <Route path="/fill-data" element={<FillData />} /> {/* Step 2: isi data */}
-        <Route path="/preview" element={<PreviewCV />} /> {/* Step 3: preview */}
       </Routes>
     </Router>
   );

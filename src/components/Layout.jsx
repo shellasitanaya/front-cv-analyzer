@@ -54,7 +54,7 @@ export default function Layout({ children }) {
     
     if (userAllowedRoutes.includes("/user-cv-analysis")) {
       items.push({
-        label: "📊 CV Analysis",
+        label: "CV Analysis",
         path: "/user-cv-analysis",
         icon: "📊"
       });
@@ -62,7 +62,7 @@ export default function Layout({ children }) {
     
     if (userAllowedRoutes.includes("/user-test")) {
       items.push({
-        label: "🎨 CV Generator", 
+        label: "CV Generator", 
         path: "/user-test",
         icon: "🎨"
       });
@@ -70,7 +70,7 @@ export default function Layout({ children }) {
     
     if (userAllowedRoutes.includes("/hr-test")) {
       items.push({
-        label: "🔍 Candidate Search",
+        label: "Candidate Search",
         path: "/hr-test", 
         icon: "🔍"
       });
@@ -78,7 +78,7 @@ export default function Layout({ children }) {
     
     if (userAllowedRoutes.includes("/hr-screening")) {
       items.push({
-        label: "📋 Screening",
+        label: "Screening",
         path: "/hr-screening",
         icon: "📋"
       });
@@ -86,7 +86,7 @@ export default function Layout({ children }) {
     
     if (userAllowedRoutes.includes("/hr-ranking")) {
       items.push({
-        label: "🏆 Ranking",
+        label: "Ranking",
         path: "/hr-ranking",
         icon: "🏆"
       });
@@ -94,7 +94,7 @@ export default function Layout({ children }) {
     
     if (userAllowedRoutes.includes("/admin-dashboard")) {
       items.push({
-        label: "⚙️ Admin",
+        label: "Admin",
         path: "/admin-dashboard",
         icon: "⚙️"
       });

@@ -1,182 +1,250 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { jobSeekerApi } from '../../api/jobSeekerApi'; // ✅ PATH DIPERBAIKI
 
 function MyCVsSection() {
-  // Sample data - nanti bisa diambil dari API
-  const myCVs = [
-    {
-      id: 1,
-      filename: "sarah_johnson_cv.pdf",
-      uploadDate: "Mar 15, 2024",
-      status: "Analyzed",
-      score: 85,
-      jobType: "ERP Business Analyst",
-      language: "English"
-    },
-    {
-      id: 2,
-      filename: "cv_budi_santoso.docx", 
-      uploadDate: "Mar 12, 2024",
-      status: "Pending",
-      score: null,
-      jobType: "IT Data Engineer",
-      language: "Bahasa Indonesia"
-    },
-    {
-      id: 3,
-      filename: "marketing_specialist_cv.pdf",
-      uploadDate: "Mar 08, 2024", 
-      status: "Analyzed",
-      score: 72,
-      jobType: "ERP Business Analyst",
-      language: "Bilingual"
-    }
-  ];
+  const [cvs, setCvs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedAnalysis, setSelectedAnalysis] = useState(null);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Analyzed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  const loadMyCVs = async () => {
+    try {
+      setLoading(true);
+      const response = await jobSeekerApi.getMyCVs();
+      if (response.status === 'success') {
+        setCvs(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error loading CVs:', error);
+      alert('Failed to load your CVs');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'text-green-600 bg-green-50';
-    if (score >= 60) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
-  };
-
-  const getLanguageIcon = (language) => {
-    switch (language) {
-      case 'English': return '🇺🇸';
-      case 'Bahasa Indonesia': return '🇮🇩';
-      case 'Bilingual': return '🌐';
-      default: return '📄';
+  const handleDeleteCV = async (cvId, cvTitle) => {
+    if (window.confirm(`Are you sure you want to delete "${cvTitle}"?`)) {
+      try {
+        await jobSeekerApi.deleteCV(cvId);
+        await loadMyCVs(); // Reload the list
+      } catch (error) {
+        console.error('Error deleting CV:', error);
+        alert('Failed to delete CV');
+      }
     }
   };
+
+  const handleViewAnalysis = async (analysisId) => {
+    try {
+      const response = await jobSeekerApi.getAnalysisDetail(analysisId);
+      if (response.status === 'success') {
+        setSelectedAnalysis(response.data);
+      }
+    } catch (error) {
+      console.error('Error loading analysis:', error);
+      alert('Failed to load analysis details');
+    }
+  };
+
+  const closeAnalysisModal = () => {
+    setSelectedAnalysis(null);
+  };
+
+  useEffect(() => {
+    loadMyCVs();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg p-8 border border-[#DCEDFF]">
+        <h2 className="text-2xl font-bold text-[#343F3E] mb-6">My CVs</h2>
+        <div className="flex justify-center items-center py-8">
+          <div className="w-8 h-8 border-2 border-[#94B0DA] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-[#343F3E]">
-            My CVs
-          </h2>
-          <p className="text-[#505A5B]">
-            Manage and track your uploaded CVs
-          </p>
-        </div>
-        <div className="text-sm text-[#8F91A2]">
-          {myCVs.length} CVs uploaded
-        </div>
+    <div className="bg-white rounded-2xl shadow-lg p-8 border border-[#DCEDFF]">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-[#343F3E]">My CVs</h2>
+        <button
+          onClick={loadMyCVs}
+          className="px-4 py-2 bg-[#DCEDFF] text-[#343F3E] rounded-lg hover:bg-[#94B0DA] hover:text-white transition-colors"
+        >
+          Refresh
+        </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b-2 border-[#DCEDFF]">
-              <th className="text-left py-4 px-4 font-semibold text-[#343F3E]">File</th>
-              <th className="text-left py-4 px-4 font-semibold text-[#343F3E]">Upload Date</th>
-              <th className="text-left py-4 px-4 font-semibold text-[#343F3E]">Job Type</th>
-              <th className="text-left py-4 px-4 font-semibold text-[#343F3E]">Language</th>
-              <th className="text-left py-4 px-4 font-semibold text-[#343F3E]">Status</th>
-              <th className="text-left py-4 px-4 font-semibold text-[#343F3E]">Score</th>
-              <th className="text-left py-4 px-4 font-semibold text-[#343F3E]">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {myCVs.map((cv) => (
-              <tr key={cv.id} className="border-b border-[#DCEDFF] hover:bg-[#DCEDFF] transition-colors group">
-                <td className="py-4 px-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{getLanguageIcon(cv.language)}</span>
-                    <div>
-                      <div className="font-medium text-[#343F3E] group-hover:text-[#505A5B] transition-colors">
-                        {cv.filename}
+      {cvs.length === 0 ? (
+        <div className="text-center py-8 text-[#505A5B]">
+          <div className="text-6xl mb-4">📝</div>
+          <p className="text-lg">You haven't uploaded any CVs yet.</p>
+          <p className="text-sm">Upload your first CV to get started!</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {cvs.map((cv) => (
+            <div
+              key={cv.cv_id}
+              className="border border-[#DCEDFF] rounded-lg p-4 hover:shadow-md transition-shadow"
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-[#343F3E] text-lg">
+                    {cv.cv_title}
+                  </h3>
+                  <p className="text-sm text-[#505A5B] mt-1">
+                    Original file: {cv.original_filename}
+                  </p>
+                  <p className="text-xs text-[#8F91A2] mt-1">
+                    Uploaded: {new Date(cv.uploaded_at).toLocaleDateString()}
+                  </p>
+                  
+                  {cv.latest_analysis && (
+                    <div className="mt-3 p-3 bg-[#F8FAFF] rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="font-medium text-[#343F3E]">
+                            Latest Analysis: 
+                          </span>
+                          <span className={`ml-2 font-bold ${
+                            cv.latest_analysis.match_score >= 80 ? 'text-green-600' :
+                            cv.latest_analysis.match_score >= 60 ? 'text-yellow-600' : 'text-red-600'
+                          }`}>
+                            {cv.latest_analysis.match_score}%
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleViewAnalysis(cv.latest_analysis.analysis_id)}
+                          className="px-3 py-1 bg-[#94B0DA] text-white text-sm rounded hover:bg-[#7A9BC8] transition-colors"
+                        >
+                          View Details
+                        </button>
                       </div>
+                      <p className="text-xs text-[#505A5B] mt-1 truncate">
+                        {cv.latest_analysis.job_description_preview}
+                      </p>
                     </div>
-                  </div>
-                </td>
-                <td className="py-4 px-4 text-[#505A5B]">{cv.uploadDate}</td>
-                <td className="py-4 px-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#94B0DA] text-white">
-                    {cv.jobType}
-                  </span>
-                </td>
-                <td className="py-4 px-4">
-                  <span className="text-sm text-[#505A5B]">{cv.language}</span>
-                </td>
-                <td className="py-4 px-4">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(cv.status)}`}>
-                    {cv.status}
-                  </span>
-                </td>
-                <td className="py-4 px-4">
-                  {cv.score ? (
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(cv.score)}`}>
-                      {cv.score}%
-                    </span>
-                  ) : (
-                    <span className="text-[#8F91A2]">-</span>
                   )}
-                </td>
-                <td className="py-4 px-4">
-                  <div className="flex gap-2">
-                    <button 
-                      className="p-2 text-[#94B0DA] hover:bg-[#94B0DA] hover:text-white rounded-lg transition-colors"
-                      title="View Analysis"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </button>
-                    <button 
-                      className="p-2 text-[#94B0DA] hover:bg-[#94B0DA] hover:text-white rounded-lg transition-colors"
-                      title="Download"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </button>
-                    <button 
-                      className="p-2 text-[#8F91A2] hover:bg-red-500 hover:text-white rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {myCVs.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">📄</div>
-          <p className="text-[#8F91A2] text-lg">No CVs uploaded yet.</p>
-          <p className="text-[#505A5B] text-sm mt-1">Upload your first CV to get started!</p>
+                </div>
+                
+                <button
+                  onClick={() => handleDeleteCV(cv.cv_id, cv.cv_title)}
+                  className="ml-4 px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Upload Info */}
-      <div className="mt-6 p-4 bg-[#DCEDFF] rounded-lg border border-[#94B0DA]">
-        <div className="flex items-center gap-3">
-          <div className="text-2xl">💡</div>
-          <div>
-            <p className="text-sm text-[#505A5B]">
-              <strong>Supported Formats:</strong> PDF, DOCX (Max 10MB)
-            </p>
-            <p className="text-sm text-[#505A5B]">
-              <strong>Languages:</strong> Bahasa Indonesia & English
-            </p>
+      {/* Analysis Detail Modal */}
+      {selectedAnalysis && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-[#343F3E]">Analysis Details</h3>
+              <button
+                onClick={closeAnalysisModal}
+                className="text-[#8F91A2] hover:text-[#505A5B] text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-[#F8FAFF] p-4 rounded-lg">
+                  <h4 className="font-semibold text-[#343F3E]">Match Score</h4>
+                  <div className={`text-2xl font-bold mt-2 ${
+                    selectedAnalysis.match_score >= 80 ? 'text-green-600' :
+                    selectedAnalysis.match_score >= 60 ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {selectedAnalysis.match_score}%
+                  </div>
+                </div>
+                
+                <div className="bg-[#F8FAFF] p-4 rounded-lg">
+                  <h4 className="font-semibold text-[#343F3E]">Analyzed At</h4>
+                  <p className="text-[#505A5B] mt-2">
+                    {new Date(selectedAnalysis.analyzed_at).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-[#F8FAFF] p-4 rounded-lg">
+                <h4 className="font-semibold text-[#343F3E] mb-2">Job Description</h4>
+                <p className="text-[#505A5B] whitespace-pre-wrap">
+                  {selectedAnalysis.job_description}
+                </p>
+              </div>
+
+              {selectedAnalysis.keyword_analysis && (
+                <div className="bg-[#F8FAFF] p-4 rounded-lg">
+                  <h4 className="font-semibold text-[#343F3E] mb-2">Keyword Analysis</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h5 className="font-medium text-green-600 mb-1">Matched Keywords</h5>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedAnalysis.keyword_analysis.matched_keywords?.map((keyword, index) => (
+                          <span key={index} className="px-2 py-1 bg-green-100 text-green-800 text-sm rounded">
+                            {keyword}
+                          </span>
+                        )) || <span className="text-[#505A5B]">None</span>}
+                      </div>
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-red-600 mb-1">Missing Keywords</h5>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedAnalysis.keyword_analysis.missing_keywords?.map((keyword, index) => (
+                          <span key={index} className="px-2 py-1 bg-red-100 text-red-800 text-sm rounded">
+                            {keyword}
+                          </span>
+                        )) || <span className="text-[#505A5B]">None</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedAnalysis.ats_check_result && (
+                <div className="bg-[#F8FAFF] p-4 rounded-lg">
+                  <h4 className="font-semibold text-[#343F3E] mb-2">ATS Check Results</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Contact Info Found:</span>
+                      <span className={selectedAnalysis.ats_check_result.contact_info?.email_found ? 'text-green-600' : 'text-red-600'}>
+                        {selectedAnalysis.ats_check_result.contact_info?.email_found ? '✓' : '✗'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Experience Section:</span>
+                      <span className={selectedAnalysis.ats_check_result.common_sections?.experience ? 'text-green-600' : 'text-red-600'}>
+                        {selectedAnalysis.ats_check_result.common_sections?.experience ? '✓' : '✗'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Education Section:</span>
+                      <span className={selectedAnalysis.ats_check_result.common_sections?.education ? 'text-green-600' : 'text-red-600'}>
+                        {selectedAnalysis.ats_check_result.common_sections?.education ? '✓' : '✗'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Skills Section:</span>
+                      <span className={selectedAnalysis.ats_check_result.common_sections?.skills ? 'text-green-600' : 'text-red-600'}>
+                        {selectedAnalysis.ats_check_result.common_sections?.skills ? '✓' : '✗'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
