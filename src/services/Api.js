@@ -26,6 +26,7 @@ async function request(endpoint, { method = "GET", body, headers = {} } = {}) {
 
   const res = await fetch(`${API_BASE_URL}${endpoint}`, config);
   const data = await res.json();
+  console.log("API Response:", data);
 
   if (!res.ok) {
     throw new Error(data.message || "API request error");

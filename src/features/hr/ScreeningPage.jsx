@@ -59,8 +59,8 @@ function ScreeningPage() {
 
     // Anda bisa mengaktifkan kembali baris ini jika ingin daftar file
     // dan summary di-reset setiap kali berganti pekerjaan
-    setFiles([]);
-    setSummary(null);
+    // setFiles([]);
+    // setSummary(null);
   };
 
 
@@ -85,7 +85,7 @@ function ScreeningPage() {
       formData.append('cv_files', file);
     });
 
-
+    // buat request ke backend untuk proses CV
     try {
       const response = await axios.post(`/api/hr/jobs/${selectedJob.id}/upload`, formData);
       setSummary(response.data);
@@ -97,7 +97,6 @@ function ScreeningPage() {
       setIsProcessing(false);
     }
 
-    
 
   };
 

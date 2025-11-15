@@ -11,12 +11,12 @@ const SkillTag = ({ skill }) => (
 
 function CandidateCard({ candidate }) {
   // Data dummy sebagai placeholder jika tidak ada di API
-  const jobTitle = candidate.job_title || 'Senior Frontend Developer';
-  const experience = candidate.experience || '5 years experience';
-  const university = candidate.university || 'Stanford University';
-  const location = candidate.location || 'San Francisco, CA';
-  const currentCompany = candidate.current_company || 'TechCorp';
-  const gpa = candidate.gpa || '3.8';
+  const jobTitle = candidate.job_title;
+  const experience = candidate.experience;
+  const university = candidate.university;
+  const location = candidate.location;
+  const currentCompany = candidate.current_company;
+  const gpa = candidate.gpa;
 
   const skillsToShow = candidate.hard_skills?.slice(0, 3) || [];
   const remainingSkills = candidate.hard_skills?.length > 3 ? candidate.hard_skills.length - 3 : 0;
