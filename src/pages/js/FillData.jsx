@@ -26,7 +26,8 @@ function FillData() {
         degree: "",
         university: "",
         graduation_year: "",
-        major: ""
+        major: "",
+        gpa: ""
       }
     ],
     skills: "",
@@ -144,7 +145,8 @@ function FillData() {
       degree: edu.degree?.trim() || "",
       university: edu.university?.trim() || "",
       graduation_year: edu.graduation_year?.trim() || "",
-      major: edu.major?.trim() || ""
+      major: edu.major?.trim() || "",
+      gpa: edu.gpa?.trim() || ""
     }));
 
     const validatedData = {
@@ -391,6 +393,15 @@ function FillData() {
                         onChange={(e) => handleEducationChange(index, 'major', e.target.value)}
                         className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-purple-200 focus:border-purple-500"
                         placeholder="Teknik Informatika"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs text-gray-500 mb-1">IPK</label>
+                      <input
+                        value={edu.gpa || ''}
+                        onChange={(e) => handleEducationChange(index, 'gpa', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="3.75"
                       />
                     </div>
                   </div>
