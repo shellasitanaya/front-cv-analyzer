@@ -97,9 +97,13 @@ function SearchBar() {
   const inputRef = useRef(null);
   const suggestionsRef = useRef(null);
 
-  // Fetch suggestions dari API
+  // Fetch suggestions dari API - ambil kata terakhir yang sedang diketik
   const fetchSuggestions = async (searchTerm) => {
-    if (searchTerm.length < 2) {
+    // Ambil kata terakhir yang sedang diketik
+    const words = searchTerm.trim().split(/\s+/);
+    const lastWord = words[words.length - 1] || '';
+    
+    if (lastWord.length < 1) {
       setSuggestions([]);
       return;
     }
@@ -107,7 +111,7 @@ function SearchBar() {
     setIsLoadingSuggestions(true);
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/skills/autocomplete?q=${encodeURIComponent(searchTerm)}`
+        `${process.env.REACT_APP_API_URL}/api/skills/autocomplete?q=${encodeURIComponent(lastWord)}`
       );
       setSuggestions(res.data.data || []);
     } catch (err) {
@@ -146,13 +150,19 @@ function SearchBar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fungsi untuk menambah skill yang dipilih
+  // FUNGSI YANG DIPERBAIKI: Menambah skill tanpa menghapus query yang sudah ada
   const handleAddSkill = (skill) => {
     if (!selectedSkills.some(s => s.id === skill.id)) {
       setSelectedSkills(prev => [...prev, skill]);
-      setQuery("");
+      
+      // PERBAIKAN: Tidak mengosongkan query, hanya menutup suggestions
       setShowSuggestions(false);
       setSuggestions([]);
+      
+      // Fokus kembali ke input field
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     }
   };
 
@@ -185,19 +195,53 @@ function SearchBar() {
     return results.length > 0 && results[0].total_searched_skills === 1 && results[0].matched_skills_count === 1;
   };
 
+  // Fungsi untuk mengecek apakah hasil mengandung kombinasi role + skill
+  const isCombinedRoleSkillSearch = () => {
+    return results.length > 0 && 
+           results[0].has_role_match && 
+           results[0].total_searched_skills > 0;
+  };
+
+  // Fungsi untuk mendapatkan skill terms dari query (exclude role terms)
+  const getSkillTermsFromQuery = () => {
+    if (!results.length || !results[0].role_matched) return query;
+    
+    const roleWords = results[0].role_matched.split(/\s+/);
+    const queryWords = query.split(/\s+/);
+    
+    // Filter out words that are part of the role
+    const skillWords = queryWords.filter(word => 
+      !roleWords.some(roleWord => 
+        roleWord.toLowerCase().includes(word.toLowerCase()) || 
+        word.toLowerCase().includes(roleWord.toLowerCase())
+      )
+    );
+    
+    return skillWords.join(' ');
+  };
+
+  // PERBAIKAN BESAR: Fungsi search yang benar-benar menggabungkan role dan selected skills
   const handleSearch = async () => {
     try {
-      // Jika ada selected skills, gabungkan dengan query
+      // Jika ada selected skills, kita akan mengirimkan kombinasi role + skills
       let searchQuery = query;
-      if (selectedSkills.length > 0) {
-        const skillNames = selectedSkills.map(skill => skill.name);
-        if (query.trim()) {
-          skillNames.push(query.trim());
-        }
-        searchQuery = skillNames.join(' ');
-      }
+      let isCombinedSearch = false;
 
-      // Jika search query kosong setelah gabungan
+      if (selectedSkills.length > 0 && query.trim()) {
+        // KOMBINASI: Role + Selected Skills
+        const skillNames = selectedSkills.map(skill => skill.name);
+        searchQuery = `${query} ${skillNames.join(' ')}`;
+        isCombinedSearch = true;
+        console.log("🎯 Combined search:", { role: query, skills: skillNames });
+      } else if (selectedSkills.length > 0) {
+        // HANYA SKILLS: Tidak ada role, hanya skills yang dipilih
+        const skillNames = selectedSkills.map(skill => skill.name);
+        searchQuery = skillNames.join(' ');
+        console.log("🔍 Skills-only search:", skillNames);
+      }
+      // Jika hanya query saja (tidak ada selected skills), biarkan seperti semula
+
+      // Jika search query kosong
       if (!searchQuery.trim()) {
         setResults([]);
         setHasSearched(true);
@@ -209,26 +253,39 @@ function SearchBar() {
       setHasSearched(true);
       setCorrectedQuery(null);
       
-      console.log("🔍 Original query:", searchQuery);
+      console.log("🔍 Final query:", searchQuery);
 
-      // Cari koreksi untuk query
-      const closestRole = findClosestRole(searchQuery);
-      
-      if (closestRole && closestRole !== searchQuery.toLowerCase()) {
-        console.log("🎯 Corrected query:", closestRole);
-        searchQuery = closestRole;
-        setCorrectedQuery(closestRole);
+      // Cari koreksi untuk query (hanya untuk bagian role)
+      let finalQuery = searchQuery;
+      if (query.trim() && !isCombinedSearch) {
+        const closestRole = findClosestRole(query);
+        if (closestRole && closestRole !== query.toLowerCase()) {
+          console.log("🎯 Corrected role:", closestRole);
+          finalQuery = closestRole;
+          setCorrectedQuery(closestRole);
+        }
       }
 
       console.log("API URL:", process.env.REACT_APP_API_URL);
 
       const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/hr/candidates/search?q=${encodeURIComponent(searchQuery)}`
+        `${process.env.REACT_APP_API_URL}/api/hr/candidates/search?q=${encodeURIComponent(finalQuery)}`
       );
 
       console.log("✅ API Data:", res.data);
       
-      setResults(res.data.data || []);
+      // Filter results untuk memastikan kandidat memiliki role yang dicari (jika ada query role)
+      let filteredResults = res.data.data || [];
+      
+      if (isCombinedSearch && query.trim()) {
+        // Untuk kombinasi search, pastikan kandidat memiliki role match
+        filteredResults = filteredResults.filter(candidate => 
+          candidate.has_role_match || candidate.match_score > 70
+        );
+        console.log(`🎯 Filtered to ${filteredResults.length} candidates with role match`);
+      }
+      
+      setResults(filteredResults);
       setHasSearched(true);
       
     } catch (err) {
@@ -274,9 +331,15 @@ function SearchBar() {
       } else {
         handleSearch();
       }
+      setShowSuggestions(false);
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
     }
+  };
+
+  // Fungsi untuk mendapatkan nama skill yang dipilih
+  const getSelectedSkillNames = () => {
+    return selectedSkills.map(skill => skill.name).join(', ');
   };
 
   return (
@@ -318,7 +381,7 @@ function SearchBar() {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               onFocus={() => setShowSuggestions(true)}
-              placeholder={selectedSkills.length > 0 ? "Add more skills..." : "Cari skill atau role (contoh: PHP, Python, Software Engineer)..."}
+              placeholder={selectedSkills.length > 0 ? "Tambahkan role (contoh: software engineer)..." : "Cari skill atau role (contoh: PHP, Python, Software Engineer)..."}
               className="border rounded-md p-2 w-full shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             
@@ -387,18 +450,25 @@ function SearchBar() {
         </div>
       )}
 
-      {/* Informasi Pencarian Skill - HANYA TAMPIL JIKA BUKAN ROLE SEARCH dan ada hasil */}
-      {results.length > 0 && isMultipleSkillSearch(query) && !correctedQuery && !isRoleSearchResult() && (
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-700">
-            Menampilkan kandidat dengan <strong>{results[0].total_searched_skills} skill</strong> yang dicari. 
-            Kandidat teratas memiliki <strong>{results[0].matched_skills_count} skill</strong> yang cocok.
+      {/* Informasi Pencarian Kombinasi Role + Skill */}
+      {results.length > 0 && selectedSkills.length > 0 && query.trim() && (
+        <div className="mb-4 p-3 bg-indigo-50 rounded-lg">
+          <p className="text-sm text-indigo-700">
+            🎯 Menampilkan kandidat untuk role: <strong>{correctedQuery || query}</strong>
+            <br />
+            <span className="text-indigo-600">
+              dengan skill: <strong>{getSelectedSkillNames()}</strong>
+            </span>
+            <br />
+            <span className="text-indigo-500 text-xs">
+              Berdasarkan pengalaman kerja dan skill yang cocok
+            </span>
           </p>
         </div>
       )}
 
-      {/* Informasi Role Search - TAMPIL JIKA ROLE SEARCH */}
-      {results.length > 0 && (isRoleSearch(query) || correctedQuery || isRoleSearchResult()) && (
+      {/* Informasi Hanya Role Search */}
+      {results.length > 0 && selectedSkills.length === 0 && query.trim() && (
         <div className="mb-4 p-3 bg-green-50 rounded-lg">
           <p className="text-sm text-green-700">
             🎯 Menampilkan kandidat untuk role: <strong>{correctedQuery || query}</strong>
@@ -408,11 +478,11 @@ function SearchBar() {
         </div>
       )}
 
-      {/* Informasi Single Skill Search - TAMPIL JIKA SINGLE SKILL */}
-      {results.length > 0 && !isRoleSearch(query) && !isMultipleSkillSearch(query) && !correctedQuery && !isRoleSearchResult() && (
+      {/* Informasi Hanya Skill Search */}
+      {results.length > 0 && selectedSkills.length > 0 && !query.trim() && (
         <div className="mb-4 p-3 bg-purple-50 rounded-lg">
           <p className="text-sm text-purple-700">
-            🔍 Menampilkan kandidat dengan skill: <strong>{query}</strong>
+            🔍 Menampilkan kandidat dengan skill: <strong>{getSelectedSkillNames()}</strong>
           </p>
         </div>
       )}
@@ -429,6 +499,7 @@ function SearchBar() {
           >
             Urutkan Match Score
             <ArrowUpDown size={16} />
+            {sortOrder === 'desc' ? '↓' : '↑'}
           </button>
         </div>
       )}
