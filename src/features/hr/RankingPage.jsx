@@ -8,11 +8,11 @@ function RankingPage() {
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [sortBy, setSortBy] = useState("match_score"); // State untuk sorting
+  const [sortBy, setSortBy] = useState("match_score");
 
   // --- 1. STATE BARU UNTUK PAGINASI ---
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Default 10 baris
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
     setIsLoading(true);
@@ -25,7 +25,7 @@ function RankingPage() {
       .finally(() => setIsLoading(false));
   }, [jobId]);
 
-  // --- 2. LOGIKA SORTING (TIDAK BERUBAH) ---
+  // --- 2. LOGIKA SORTING ---
   const sortedCandidates = useMemo(() => {
     const sortableCandidates = [...candidates];
     sortableCandidates.sort((a, b) => {
@@ -43,25 +43,19 @@ function RankingPage() {
     return sortableCandidates;
   }, [candidates, sortBy]);
 
-  // --- 3. LOGIKA BARU UNTUK PAGINASI ---
-  // Memo ini akan berjalan setelah sorting selesai
+  // --- 3. LOGIKA PAGINASI ---
   const { paginatedCandidates, totalPages } = useMemo(() => {
     const startIndex = (currentPage - 1) * rowsPerPage;
     const endIndex = startIndex + rowsPerPage;
-    
-    // Ambil data untuk halaman saat ini
     const paginated = sortedCandidates.slice(startIndex, endIndex);
-    
-    // Hitung total halaman
     const total = Math.ceil(sortedCandidates.length / rowsPerPage);
-    
     return { paginatedCandidates: paginated, totalPages: total };
   }, [sortedCandidates, currentPage, rowsPerPage]);
 
-  // --- 4. EVENT HANDLER BARU ---
+  // --- 4. EVENT HANDLER ---
   const handleRowsPerPageChange = (e) => {
     setRowsPerPage(Number(e.target.value));
-    setCurrentPage(1); // Reset ke halaman pertama saat ganti jumlah baris
+    setCurrentPage(1);
   };
 
   const handleNextPage = () => {
@@ -76,6 +70,11 @@ function RankingPage() {
     }
   };
 
+  const handleViewDetails = (candidateId) => {
+    // Ganti route ini sesuai kebutuhan Anda
+    navigate(`/candidate-details/${candidateId}`);
+    console.log("View details for:", candidateId);
+  };
 
   if (isLoading) {
     return <div className="p-8">Loading ranked candidates...</div>;
@@ -124,48 +123,49 @@ function RankingPage() {
                 </div>
               </div>
 
-              {/* ... (Judul Kolom) ... */}
+              {/* --- JUDUL KOLOM --- */}
               <div className="grid grid-cols-12 gap-4 px-4 py-2 text-xs font-bold text-gray-500 uppercase border-b">
                 <div className="col-span-1">Rank</div>
-                <div className="col-span-4">Candidate</div>
-                <div className="col-span-2 text-center">Match Score</div>
+                <div className="col-span-3">Candidate</div>
+                <div className="col-span-1 text-center">Score</div>
+                <div className="col-span-2">AI Analysis</div> {/* Diubah jadi 2 */}
                 <div className="col-span-2">Skills</div>
-                <div className="col-span-1">Education</div>
-                <div className="col-span-2">Experience</div>
+                <div className="col-span-1">Edu</div>
+                <div className="col-span-1">Exp</div>
+                <div className="col-span-1 text-center">Action</div> {/* Kolom Baru */}
               </div>
 
-              {/* --- 5. PERBARUI MAP UNTUK PAGINASI --- */}
+              {/* --- ISI DATA --- */}
               <div className="space-y-4 mt-3">
-                {/* Gunakan 'paginatedCandidates' BUKAN 'sortedCandidates' */}
                 {paginatedCandidates.map((candidate, index) => (
                   <div
                     key={candidate.id}
                     className="grid grid-cols-12 gap-4 items-center p-4 border rounded-lg hover:shadow-lg transition-shadow"
                   >
+                    {/* Rank (Col 1) */}
                     <div className="col-span-1 text-center font-bold text-xl text-gray-500">
-                      {/* Perbaikan untuk Rank Number */}
                       {(currentPage - 1) * rowsPerPage + index + 1}
                     </div>
-                    
-                    {/* ... (Kolom Candidate) ... */}
-                    <div className="col-span-4 flex items-center gap-3">
-                      <FaUserCircle className="text-4xl text-gray-400" />
-                      <div>
-                        <p className="font-bold text-gray-800">
+
+                    {/* Candidate Info (Col 3) */}
+                    <div className="col-span-3 flex items-center gap-3 overflow-hidden">
+                      <FaUserCircle className="text-3xl text-gray-400 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-bold text-gray-800 truncate" title={candidate.name}>
                           {candidate.name}
                         </p>
-                        <p className="text-sm text-gray-500">
-                          {candidate.email || "email@notfound.com"}
+                        <p className="text-sm text-gray-500 truncate" title={candidate.email}>
+                          {candidate.email || "N/A"}
                         </p>
                       </div>
                     </div>
-                    
-                    {/* ... (Kolom Match Score) ... */}
-                    <div className="col-span-2 text-center">
+
+                    {/* Match Score (Col 1) */}
+                    <div className="col-span-1 text-center">
                       <p className="font-bold text-lg text-green-600">
                         {candidate.match_score || 0}%
                       </p>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                         <div
                           className="bg-green-500 h-1.5 rounded-full"
                           style={{ width: `${candidate.match_score || 0}%` }}
@@ -173,48 +173,70 @@ function RankingPage() {
                       </div>
                     </div>
 
-                    {/* ... (Kolom Skills) ... */}
+                    {/* AI Analysis (Col 2) - Disesuaikan jadi 2 kolom */}
+                    <div className="col-span-2">
+                      {candidate.scoring_reason ? (
+                        <p className="text-xs text-gray-600 italic leading-snug line-clamp-3" title={candidate.scoring_reason}>
+                          "{candidate.scoring_reason}"
+                        </p>
+                      ) : (
+                        <p className="text-xs text-gray-400">No reasoning</p>
+                      )}
+                    </div>
+
+                    {/* Skills (Col 2) */}
                     <div className="col-span-2 text-sm text-gray-700">
                       {candidate.skills && candidate.skills.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
-                          {candidate.skills.slice(0, 5).map((skill, i) => (
+                          {candidate.skills.slice(0, 3).map((skill, i) => (
                             <span
                               key={i}
-                              className="py-1 px-2 bg-blue-100 text-blue-700 rounded-full text-xs"
+                              className="py-0.5 px-2 bg-blue-100 text-blue-700 rounded-full text-[10px] whitespace-nowrap"
                             >
                               {skill}
                             </span>
                           ))}
+                          {candidate.skills.length > 3 && (
+                            <span className="text-[10px] text-gray-500 self-center">
+                              +{candidate.skills.length - 3}
+                            </span>
+                          )}
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-xs">
-                          No skills listed
-                        </span>
+                        <span className="text-gray-400 text-xs">-</span>
                       )}
                     </div>
-                    
-                    {/* ... (Kolom Education & GPA) ... */}
-                    <div className="col-span-1 text-sm text-gray-700">
-                      <span className="font-bold">
-                        {candidate.education || "N/A"}
+
+                    {/* Education (Col 1) */}
+                    <div className="col-span-1 text-sm text-gray-700 truncate">
+                      <span className="font-bold block truncate" title={candidate.education}>
+                        {candidate.education || "-"}
                       </span>
-                      <br />
-                      GPA: {candidate.gpa || "N/A"}
+                      <span className="text-xs">GPA: {candidate.gpa || "-"}</span>
                     </div>
-                    
-                    {/* ... (Kolom Experience) ... */}
-                    <div className="col-span-2 text-sm text-gray-700">
-                      {candidate.total_experience || 0} years
+
+                    {/* Experience (Col 1) */}
+                    <div className="col-span-1 text-sm text-gray-700">
+                      {candidate.total_experience || 0} Yrs
+                    </div>
+
+                    {/* Action Button (Col 1) - NEW */}
+                    <div className="col-span-1 flex justify-center">
+                      <button
+                        onClick={() => handleViewDetails(candidate.id)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2 px-3 rounded-md transition-colors shadow-sm whitespace-nowrap"
+                      >
+                        View Details
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* --- 6. KONTROL PAGINASI BARU --- */}
+              {/* --- CONTROLLER PAGINASI --- */}
               <div className="flex justify-between items-center mt-6 pt-4 border-t text-sm text-gray-600">
-                {/* Kiri: Rows per page dropdown */}
                 <div className="flex items-center gap-2">
-                  <label htmlFor="rowsPerPage">Rows per page:</label>
+                  <label htmlFor="rowsPerPage">Rows:</label>
                   <select
                     id="rowsPerPage"
                     value={rowsPerPage}
@@ -228,25 +250,24 @@ function RankingPage() {
                   </select>
                 </div>
 
-                {/* Kanan: Navigasi Halaman */}
                 <div className="flex items-center gap-4">
-                  <span>
-                    Page {currentPage} of {totalPages} (Total {candidates.length} items)
+                  <span className="hidden sm:inline">
+                    Page {currentPage} of {totalPages}
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handlePrevPage}
                       disabled={currentPage === 1}
-                      className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1 border rounded disabled:opacity-50"
                     >
-                      &laquo; Prev
+                      Prev
                     </button>
                     <button
                       onClick={handleNextPage}
                       disabled={currentPage === totalPages}
-                      className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1 border rounded disabled:opacity-50"
                     >
-                      Next &raquo;
+                      Next
                     </button>
                   </div>
                 </div>
