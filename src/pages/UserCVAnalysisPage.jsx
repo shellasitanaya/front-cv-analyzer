@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
 import Layout from '../components/Layout';
 import CVUploadSection from '../features/user/CVUploadSection';
 import CVGeneratorSection from '../features/user/CVGeneratorSection';
@@ -12,13 +13,18 @@ function UserCVAnalysisPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
 
+  useEffect(() => {
+    console.log('🔍 uploadedFile state changed:', uploadedFile);
+  }, [uploadedFile]);
+
   const handleAnalysisComplete = (data) => {
     setAnalysisData(data);
   };
 
   const handleNewUpload = () => {
+    console.log('🔄 New upload - clearing previous data');
     setAnalysisData(null);
-    setUploadedFile(null);
+    // setUploadedFile(null);
   };
 
   return (

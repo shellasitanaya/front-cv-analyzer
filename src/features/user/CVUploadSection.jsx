@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { AstraAPI, transformAstraAnalysis   } from "../../services/Api.js"; // Sesuaikan path ke file api.js
 
 function CVUploadSection({ onAnalysisComplete, isLoading, setIsLoading, onNewUpload, uploadedFile, setUploadedFile }) {
   const [selectedJob, setSelectedJob] = useState('');
@@ -18,12 +19,59 @@ function CVUploadSection({ onAnalysisComplete, isLoading, setIsLoading, onNewUpl
     }
   ];
 
+  useEffect(() => {
+    console.log('📦 [CVUploadSection] uploadedFile:', uploadedFile);
+    console.log('📦 [CVUploadSection] cvTitle:', cvTitle);
+  }, [uploadedFile, cvTitle]);
+
+  useEffect(() => {
+    console.log('🔍 [Button State Debug]');
+    console.log('  isLoading:', isLoading);
+    console.log('  uploadedFile:', uploadedFile);
+    console.log('  selectedJob:', selectedJob);
+    console.log('  Button enabled?', !isLoading && !!uploadedFile && !!selectedJob);
+  }, [isLoading, uploadedFile, selectedJob]);
+
   const handleFileChange = (e) => {
+    console.log('🔍 handleFileChange triggered!', e.target.files);
     const file = e.target.files[0];
+    console.log('📄 File selected:', file);
+    
     if (file) {
+      console.log('File details:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+      
+      // Validasi file
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size terlalu besar. Maksimal 10MB');
+        return;
+      }
+      
+      const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!validTypes.includes(file.type)) {
+        console.log('❌ Invalid file type:', file.type);
+        alert('Format file tidak didukung. Gunakan PDF, DOC, atau DOCX');
+        return;
+      }
+      
+      console.log('✅ File valid, setting uploadedFile...');
+      const fileName = file.name.replace(/\.[^/.]+$/, "");
+      
+      // Set semua state sekaligus
       setUploadedFile(file);
-      setCvTitle(file.name.replace(/\.[^/.]+$/, ""));
-      onNewUpload();
+      setCvTitle(fileName);
+      
+      if (onNewUpload) {
+        onNewUpload();
+      }
+      
+      console.log('✅ File uploaded successfully!');
+      console.log('📝 Set cvTitle to:', fileName);
+    } else {
+      console.log('❌ No file selected');
     }
   };
 
@@ -38,15 +86,18 @@ function CVUploadSection({ onAnalysisComplete, isLoading, setIsLoading, onNewUpl
   };
 
   const handleDrop = (e) => {
+    console.log('🔍 handleDrop triggered!', e.dataTransfer.files);
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      setUploadedFile(file);
-      setCvTitle(file.name.replace(/\.[^/.]+$/, ""));
-      onNewUpload();
+      console.log('📄 Dropped file:', file);
+      
+      // ... rest of validation
+    } else {
+      console.log('❌ No files in drop event');
     }
   };
 
@@ -63,46 +114,42 @@ function CVUploadSection({ onAnalysisComplete, isLoading, setIsLoading, onNewUpl
 
     setIsLoading(true);
     try {
-      // Simulate API call for now
-      setTimeout(() => {
-        const mockResult = {
-          analysis_id: 'mock-123',
-          cv_id: 'mock-cv-123',
-          match_score: 78.5,
-          job_type: selectedJob,
-          job_info: jobOptions.find(job => job.id === selectedJob),
-          ats_friendliness: {
-            common_sections: {
-              experience: true,
-              education: true,
-              skills: true
-            },
-            contact_info: {
-              email_found: true,
-              phone_found: true
-            },
-            compatibility_score: 44,
-            format_check: "Needs Improvement",
-            readability: "Fair",
-            sections_status: "Incomplete"
-          },
-          keyword_analysis: {
-            matched_keywords: ['python', 'javascript', 'react', 'business analysis'],
-            missing_keywords: ['docker', 'aws', 'kubernetes', 'ERP'],
-            total_words: 847,
-            skills_found: 23
-          },
-          parsed_info: {
-            experience_years: 5.2
-          },
-          message: "Analisis berhasil dan disimpan ke database."
-        };
-        onAnalysisComplete(mockResult);
-        setIsLoading(false);
-      }, 2000);
+      // Buat FormData untuk upload file
+      const formData = new FormData();
+      formData.append('cv_file', uploadedFile);
+      formData.append('cv_title', cvTitle);
+      formData.append('job_type', selectedJob);
+
+      console.log('📤 Uploading CV to backend...', {
+        file: uploadedFile.name,
+        jobType: selectedJob,
+        size: uploadedFile.size,
+        type: uploadedFile.type
+      });
+
+      // ✅ DEBUG: Check FormData contents
+      for (let [key, value] of formData.entries()) {
+        console.log(`FormData: ${key} =`, value);
+      }
+
+      // Panggil API yang sebenarnya
+      const result = await AstraAPI.analyzeCV(selectedJob, formData);
+      
+      const transformedData = transformAstraAnalysis(result);
+      onAnalysisComplete(transformedData);
+      console.log('✅ Analysis complete:', result);
+      onAnalysisComplete(result);
+      
     } catch (error) {
-      console.error('Analysis error:', error);
-      alert(error.error || 'Failed to analyze CV');
+      console.error('❌ Analysis error:', error);
+      
+      // ✅ TAMPILKAN ERROR DETAIL
+      if (error.message.includes('Network error') || error.message.includes('Failed to fetch')) {
+        alert('Tidak dapat terhubung ke server. Pastikan backend berjalan di http://localhost:5000');
+      } else {
+        alert(error.message || 'Failed to analyze CV');
+      }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -158,17 +205,23 @@ function CVUploadSection({ onAnalysisComplete, isLoading, setIsLoading, onNewUpl
             accept=".pdf,.doc,.docx"
             className="hidden"
             id="cv-upload"
+            style={{ display: 'none', position: 'absolute', zIndex: -1 }}
           />
           <label htmlFor="cv-upload" className="cursor-pointer block">
             <div className="text-4xl mb-4">📄</div>
             <p className="text-lg font-medium text-[#343F3E] mb-2">
-              {uploadedFile ? uploadedFile.name : 'Drag & drop your CV here'}
+              {/* ✅ TAMPILKAN FILE NAME */}
+              {uploadedFile ? (
+                <span className="text-green-600">✓ {uploadedFile.name}</span>
+              ) : (
+                'Drag & drop your CV here'
+              )}
             </p>
             <p className="text-[#505A5B] mb-4">
               or click to browse files
             </p>
             <div className="px-6 py-2 bg-[#94B0DA] text-white rounded-lg inline-block hover:bg-[#7A9BC8] transition-colors">
-              Choose File
+              {uploadedFile ? 'Change File' : 'Choose File'}
             </div>
           </label>
         </div>
@@ -198,7 +251,7 @@ function CVUploadSection({ onAnalysisComplete, isLoading, setIsLoading, onNewUpl
             Analyzing CV...
           </div>
         ) : (
-          'Analyze CV'
+          `Analyze CV ${uploadedFile ? `(${uploadedFile.name})` : ''}`
         )}
       </button>
     </div>

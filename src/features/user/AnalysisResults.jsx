@@ -3,7 +3,32 @@ import React from 'react';
 function AnalysisResults({ analysisData }) {
   if (!analysisData) return null;
 
-  const { match_score, ats_friendliness, keyword_analysis, job_info, parsed_info } = analysisData;
+  // ✅ Extract data dari struktur Astra API
+  const { 
+    analysis_result, 
+    job_info, 
+    parsed_info 
+  } = analysisData;
+
+  // ✅ Gunakan skor_akhir dari analysis_result
+  const match_score = analysis_result?.skor_akhir || 0;
+  
+  // ✅ Buat struktur yang kompatibel untuk ATS dan keyword analysis
+  const ats_friendliness = {
+    compatibility_score: match_score,
+    format_check: "Good",
+    readability: "Good", 
+    sections_status: "Complete",
+    contact_info: {
+      email_found: !!parsed_info?.email,
+      phone_found: !!parsed_info?.phone
+    }
+  };
+
+  const keyword_analysis = {
+    total_words: parsed_info?.cv_full_text?.split(/\s+/).length || 0,
+    skills_found: analysis_result?.detail_skor?.nice_to_have?.skor || 0
+  };
 
   const getScoreColor = (score) => {
     if (score >= 80) return 'text-green-600';
@@ -30,7 +55,7 @@ function AnalysisResults({ analysisData }) {
       <div className="bg-white rounded-2xl shadow-lg p-8 border border-[#DCEDFF]">
         <h2 className="text-2xl font-bold text-[#343F3E] mb-2">CV Analysis Results</h2>
         <p className="text-[#505A5B] mb-6">
-          Comprehensive analysis of your CV performance for {job_info?.name}
+          Comprehensive analysis of your CV performance for {job_info?.nama || job_info?.name}
         </p>
         
         {/* Overall Score */}
@@ -42,16 +67,19 @@ function AnalysisResults({ analysisData }) {
           <div className="w-full bg-gray-200 rounded-full h-3 max-w-md mx-auto">
             <div
               className={`h-3 rounded-full ${getScoreBgColor(match_score)} ${getScoreColor(match_score).replace('text-', 'bg-')}`}
-              style={{ width: `${match_score}%` }}
+              style={{ width: `${Math.min(match_score, 100)}%` }}
             ></div>
           </div>
+          <p className="text-sm text-[#505A5B] mt-2">
+            {analysis_result?.lulus ? '✅ Qualified for next stage' : '❌ Does not meet minimum requirements'}
+          </p>
         </div>
 
         {/* Job Description */}
         {job_info && (
           <div className="bg-[#F8FAFF] rounded-lg p-4">
-            <h3 className="font-semibold text-[#343F3E] mb-2">{job_info.name}</h3>
-            <p className="text-sm text-[#505A5B]">{job_info.description}</p>
+            <h3 className="font-semibold text-[#343F3E] mb-2">{job_info.nama || job_info.name}</h3>
+            <p className="text-sm text-[#505A5B]">{job_info.deskripsi || job_info.description}</p>
           </div>
         )}
       </div>
@@ -61,22 +89,22 @@ function AnalysisResults({ analysisData }) {
         {/* Keyword Match */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#DCEDFF] text-center">
           <div className="text-2xl font-bold text-[#343F3E] mb-2">{match_score}%</div>
-          <div className="text-sm text-[#505A5B] mb-1">Keyword Match</div>
+          <div className="text-sm text-[#505A5B] mb-1">Match Score</div>
           <div className="text-xs text-[#8F91A2]">
-            {match_score}% match with target job requirements
+            Compatibility with job requirements
           </div>
         </div>
 
         {/* Total Words */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#DCEDFF] text-center">
-          <div className="text-2xl font-bold text-[#343F3E] mb-2">{keyword_analysis?.total_words || 0}</div>
+          <div className="text-2xl font-bold text-[#343F3E] mb-2">{keyword_analysis.total_words}</div>
           <div className="text-sm text-[#505A5B] mb-1">Total Words</div>
           <div className="text-xs text-[#8F91A2]">Document length</div>
         </div>
 
         {/* Skills Found */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#DCEDFF] text-center">
-          <div className="text-2xl font-bold text-[#343F3E] mb-2">{keyword_analysis?.skills_found || 0}</div>
+          <div className="text-2xl font-bold text-[#343F3E] mb-2">{keyword_analysis.skills_found}</div>
           <div className="text-sm text-[#505A5B] mb-1">Skills Found</div>
           <div className="text-xs text-[#8F91A2]">Relevant skills detected</div>
         </div>
@@ -139,35 +167,54 @@ function AnalysisResults({ analysisData }) {
         </div>
       )}
 
-      {/* Score Breakdown */}
-      <div className="bg-white rounded-2xl shadow-lg p-8 border border-[#DCEDFF]">
-        <h3 className="text-xl font-bold text-[#343F3E] mb-6">Score Breakdown</h3>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-[#343F3E]">{match_score}%</div>
-            <div className="text-sm text-[#505A5B]">Overall Score</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-[#343F3E]">
-              {Math.round(match_score * 0.8)}%
+      {/* Candidate Information - Tetap ditampilkan karena penting */}
+      {parsed_info && (
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-[#DCEDFF]">
+          <h3 className="text-xl font-bold text-[#343F3E] mb-6">Candidate Information</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-semibold text-[#505A5B] mb-3">Personal Details</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-[#505A5B]">Name</span>
+                  <span className="font-medium">{parsed_info.name || 'Not found'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#505A5B]">Email</span>
+                  <span className="font-medium">{parsed_info.email || 'Not found'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#505A5B]">Phone</span>
+                  <span className="font-medium">{parsed_info.phone || 'Not found'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#505A5B]">GPA</span>
+                  <span className="font-medium">{parsed_info.gpa || 'Not found'}</span>
+                </div>
+              </div>
             </div>
-            <div className="text-sm text-[#505A5B]">Content Quality</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-[#343F3E]">
-              {ats_friendliness?.compatibility_score || 44}%
+            
+            <div>
+              <h4 className="font-semibold text-[#505A5B] mb-3">Professional Details</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-[#505A5B]">Experience</span>
+                  <span className="font-medium">{parsed_info.experience || 0} years</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#505A5B]">Major</span>
+                  <span className="font-medium">{parsed_info.major || 'Not found'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#505A5B]">Education Level</span>
+                  <span className="font-medium">{parsed_info.education_level || 'Not found'}</span>
+                </div>
+              </div>
             </div>
-            <div className="text-sm text-[#505A5B]">ATS Optimization</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-[#343F3E]">
-              {parsed_info?.experience_years || 0}
-            </div>
-            <div className="text-sm text-[#505A5B]">Experience Years</div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
