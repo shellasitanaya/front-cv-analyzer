@@ -36,7 +36,7 @@ export default function App() {
     <Router>
       <Routes>
         {/* ---------- AUTHENTICATION ---------- */}
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
