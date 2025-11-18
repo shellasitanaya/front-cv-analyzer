@@ -12,14 +12,19 @@ const SkillTag = ({ skill }) => (
 function CandidateCard({ candidate }) {
   // Data dummy sebagai placeholder jika tidak ada di API
   const jobTitle = candidate.job_title;
-  const experience = candidate.experience;
-  const university = candidate.university;
   const location = candidate.location;
-  const currentCompany = candidate.current_company;
-  const gpa = candidate.gpa;
+  // const jobTitle = candidate.job_title || 'Senior Frontend Developer';
+  const experience = candidate.experience || '5 years experience';
+  const university = candidate.university || 'Stanford University';
+  // const location = candidate.location || 'San Francisco, CA';
+  const currentCompany = candidate.current_company || 'TechCorp';
+  const gpa = candidate.gpa || '3.8';
 
-  const skillsToShow = candidate.hard_skills?.slice(0, 3) || [];
-  const remainingSkills = candidate.hard_skills?.length > 3 ? candidate.hard_skills.length - 3 : 0;
+  const skills = Array.isArray(candidate.skills) ? candidate.skills : [];
+
+  const skillsToShow = skills.slice(0, 3);
+  const remainingSkills = skills.length > 3 ? skills.length - 3 : 0;
+
 
   return (
     <div className="bg-white rounded-lg shadow-md p-5 flex items-center justify-between transition-all hover:shadow-xl hover:scale-[1.01]">
@@ -38,7 +43,7 @@ function CandidateCard({ candidate }) {
             </span>
           </div>
 
-          <p className="text-md text-gray-600 font-medium">{jobTitle}</p>
+          {/* <p className="text-md text-gray-600 font-medium">{jobTitle}</p> */}
           <p className="text-sm text-gray-500 mt-1">
             {experience} &bull; {university}
           </p>
@@ -51,13 +56,13 @@ function CandidateCard({ candidate }) {
           <div className="mt-4 flex items-center gap-6 text-sm text-gray-600 border-t pt-3 flex-wrap">
             <div className="flex items-center gap-2">
               <Briefcase size={16} className="text-gray-400" />
-              <span>Currently at <strong>{currentCompany}</strong></span>
+              <span>Last work at <strong>{currentCompany}</strong></span>
             </div>
             {/* INI BAGIAN YANG DIPERBAIKI: Menggunakan ikon MapPin */}
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <MapPin size={16} className="text-gray-400" />
               <span>{location}</span>
-            </div>
+            </div> */}
             <div className="flex items-center gap-2">
               <GraduationCap size={16} className="text-gray-400" />
               <span>GPA: <strong>{gpa}</strong></span>

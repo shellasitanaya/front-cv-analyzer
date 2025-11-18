@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import Layout from "../../components/Layout"; 
+import Layout from "../../components/Layout";
 import axios from "axios";
 
 function PreviewCV() {
@@ -28,7 +28,7 @@ function PreviewCV() {
           email: formData.email,
           phone: formData.phone,
           summary: formData.summary,
-          work_experience: formData.experience, // Perhatikan: work_experience, bukan experience
+          work_experience: formData.experience,
           education: formData.education,
           skills: formData.skills,
           template: template,
@@ -36,9 +36,8 @@ function PreviewCV() {
 
         console.log("📤 Generating PDF preview...");
 
-        // 🔧 GUNAKAN ENDPOINT YANG BENAR
         const response = await axios.post(
-          "http://localhost:5000/api/cv/generate_custom", // ✅ PERBAIKI ENDPOINT
+          "http://localhost:5000/api/cv/preview",
           requestData,
           { 
             responseType: "blob",
@@ -47,6 +46,7 @@ function PreviewCV() {
         );
 
         if (response.status === 200) {
+          // Create proper PDF blob URL
           const blob = new Blob([response.data], { type: 'application/pdf' });
           const url = window.URL.createObjectURL(blob);
           setPdfUrl(url);
@@ -110,7 +110,7 @@ function PreviewCV() {
             </div>
           ) : pdfUrl ? (
             <>
-              {/* PDF Preview Section */}
+              {/* PDF Preview Section - Clean Version */}
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold text-gray-700">Preview CV</h3>
@@ -136,13 +136,13 @@ function PreviewCV() {
                   </div>
                 </div>
 
-                // {/* Mobile warning */}
-                // <div className="mt-4 p-3 bg-blue-50 rounded-lg text-center">
-                //   <p className="text-blue-700 text-sm">
-                //     💡 <strong>Tips:</strong> Untuk preview terbaik, pastikan browser Anda mendukung PDF viewer. 
-                //     Jika preview tidak tampil dengan baik, silakan download CV.
-                //   </p>
-                // </div>
+                {/* Mobile warning */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg text-center">
+                  <p className="text-blue-700 text-sm">
+                    💡 <strong>Tips:</strong> Untuk preview terbaik, pastikan browser Anda mendukung PDF viewer. 
+                    Jika preview tidak tampil dengan baik, silakan download CV.
+                  </p>
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -153,16 +153,38 @@ function PreviewCV() {
                     download={`CV_${formData.name.replace(/\s+/g, '_')}.pdf`}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-md font-semibold transition duration-200 transform hover:scale-105 flex items-center gap-2 shadow-md"
                   >
-
-                    📥 Download CV
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Download CV
                   </a>
                   
                   <button 
                     onClick={() => window.history.back()}
                     className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-3 rounded-md font-semibold transition duration-200 flex items-center gap-2 shadow-md"
                   >
-                    ↩️ Edit Data Kembali
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Edit Data Kembali
                   </button>
+
+                  <button 
+                    onClick={() => window.open(pdfUrl, '_blank')}
+                    className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-md font-semibold transition duration-200 flex items-center gap-2 shadow-md"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Buka di Tab Baru
+                  </button>
+                </div>
+                
+                {/* File Info */}
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    📄 File siap didownload. Format: PDF | Ukuran: A4 | Template: {template}
+                  </p>
                 </div>
               </div>
             </>
