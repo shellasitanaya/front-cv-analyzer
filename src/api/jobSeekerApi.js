@@ -16,8 +16,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Di jobSeekerApi.js - perbaiki semua functions
 export const jobSeekerApi = {
-  // Upload and analyze CV
   analyzeCV: async (cvFile, jobDescription, cvTitle = 'Untitled CV') => {
     const formData = new FormData();
     formData.append('cv_file', cvFile);
@@ -29,42 +29,69 @@ export const jobSeekerApi = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 30000,
       });
+      
+      // Handle both response structures
       return response.data;
     } catch (error) {
-      throw error.response?.data || { error: 'Network error' };
+      const errorMsg = error.response?.data?.error || 
+                      error.response?.data?.message || 
+                      'Network error';
+      throw { error: errorMsg };
     }
   },
 
-  // Get user's CV history
   getMyCVs: async () => {
     try {
       const response = await api.get('/api/jobseeker/my-cvs');
       return response.data;
     } catch (error) {
-      throw error.response?.data || { error: 'Network error' };
+      const errorMsg = error.response?.data?.error || 
+                      error.response?.data?.message || 
+                      'Network error';
+      throw { error: errorMsg };
     }
   },
 
-  // Get analysis detail
   getAnalysisDetail: async (analysisId) => {
     try {
       const response = await api.get(`/api/jobseeker/analysis/${analysisId}`);
       return response.data;
     } catch (error) {
-      throw error.response?.data || { error: 'Network error' };
+      const errorMsg = error.response?.data?.error || 
+                      error.response?.data?.message || 
+                      'Network error';
+      throw { error: errorMsg };
     }
   },
 
-  // Delete CV
   deleteCV: async (cvId) => {
     try {
       const response = await api.delete(`/api/jobseeker/cv/${cvId}`);
       return response.data;
     } catch (error) {
-      throw error.response?.data || { error: 'Network error' };
+      const errorMsg = error.response?.data?.error || 
+                      error.response?.data?.message || 
+                      'Network error';
+      throw { error: errorMsg };
     }
   },
 };
+
+// Tambahkan di jobSeekerApi.js sebelum export
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  console.log('=== DEBUG API REQUEST ===');
+  console.log('URL:', config.url);
+  console.log('Token exists:', !!token);
+  console.log('Token:', token ? token.substring(0, 20) + '...' : 'No token');
+  console.log('===================');
+  
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export default jobSeekerApi;

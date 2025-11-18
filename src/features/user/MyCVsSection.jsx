@@ -1,47 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { jobSeekerApi } from '../../api/jobSeekerApi'; // ✅ PATH DIPERBAIKI
+import React, { useState } from 'react';
+import { jobSeekerApi } from '../../api/jobSeekerApi'; // Sesuaikan path jika perlu
+import AnalysisResults from './AnalysisResults'; // Impor AnalysisResults untuk modal
 
-function MyCVsSection() {
-  const [cvs, setCvs] = useState([]);
-  const [loading, setLoading] = useState(true);
+// Terima props dari parent page (UserCVAnalysisPage)
+function MyCVsSection({ cvs, isLoading, error, loadMyCVs, handleDeleteCV }) {
+  
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
-  const loadMyCVs = async () => {
-    try {
-      setLoading(true);
-      const response = await jobSeekerApi.getMyCVs();
-      if (response.status === 'success') {
-        setCvs(response.data || []);
-      }
-    } catch (error) {
-      console.error('Error loading CVs:', error);
-      alert('Failed to load your CVs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteCV = async (cvId, cvTitle) => {
-    if (window.confirm(`Are you sure you want to delete "${cvTitle}"?`)) {
-      try {
-        await jobSeekerApi.deleteCV(cvId);
-        await loadMyCVs(); // Reload the list
-      } catch (error) {
-        console.error('Error deleting CV:', error);
-        alert('Failed to delete CV');
-      }
-    }
-  };
-
+  // Fungsi view detail tetap di sini karena mengelola state modal
   const handleViewAnalysis = async (analysisId) => {
     try {
+      setModalLoading(true);
+      setSelectedAnalysis(null); // Bersihkan modal sebelumnya
       const response = await jobSeekerApi.getAnalysisDetail(analysisId);
+      
+      let analysisData;
       if (response.status === 'success') {
-        setSelectedAnalysis(response.data);
+        analysisData = response.data;
+      } else {
+        throw new Error(response.message || "Failed to get details");
       }
+      
+      setSelectedAnalysis(analysisData);
     } catch (error) {
       console.error('Error loading analysis:', error);
-      alert('Failed to load analysis details');
+      alert(error.message || 'Failed to load analysis details');
+    } finally {
+      setModalLoading(false);
     }
   };
 
@@ -49,11 +35,8 @@ function MyCVsSection() {
     setSelectedAnalysis(null);
   };
 
-  useEffect(() => {
-    loadMyCVs();
-  }, []);
-
-  if (loading) {
+  // Gunakan prop isLoading dari parent
+  if (isLoading) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-8 border border-[#DCEDFF]">
         <h2 className="text-2xl font-bold text-[#343F3E] mb-6">My CVs</h2>
@@ -69,13 +52,22 @@ function MyCVsSection() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-[#343F3E]">My CVs</h2>
         <button
-          onClick={loadMyCVs}
+          onClick={loadMyCVs} // Gunakan fungsi refresh dari parent
           className="px-4 py-2 bg-[#DCEDFF] text-[#343F3E] rounded-lg hover:bg-[#94B0DA] hover:text-white transition-colors"
+          disabled={isLoading} // disable saat loading
         >
-          Refresh
+          {isLoading ? '...' : 'Refresh'}
         </button>
       </div>
 
+      {/* Tampilkan error dari parent */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          {error}
+        </div>
+      )}
+
+      {/* Gunakan data 'cvs' dari parent */}
       {cvs.length === 0 ? (
         <div className="text-center py-8 text-[#505A5B]">
           <div className="text-6xl mb-4">📝</div>
@@ -83,25 +75,25 @@ function MyCVsSection() {
           <p className="text-sm">Upload your first CV to get started!</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
           {cvs.map((cv) => (
             <div
-              key={cv.cv_id}
+              key={cv.cv_id} // Gunakan cv_id yang konsisten
               className="border border-[#DCEDFF] rounded-lg p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-[#343F3E] text-lg">
-                    {cv.cv_title}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-[#343F3E] text-lg truncate" title={cv.cv_title}>
+                    {cv.cv_title || 'Untitled CV'}
                   </h3>
-                  <p className="text-sm text-[#505A5B] mt-1">
+                  <p className="text-sm text-[#505A5B] mt-1 truncate">
                     Original file: {cv.original_filename}
                   </p>
                   <p className="text-xs text-[#8F91A2] mt-1">
-                    Uploaded: {new Date(cv.uploaded_at).toLocaleDateString()}
+                    Uploaded: {new Date(cv.uploaded_at).toLocaleString()}
                   </p>
                   
-                  {cv.latest_analysis && (
+                  {cv.latest_analysis ? (
                     <div className="mt-3 p-3 bg-[#F8FAFF] rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
@@ -109,10 +101,10 @@ function MyCVsSection() {
                             Latest Analysis: 
                           </span>
                           <span className={`ml-2 font-bold ${
-                            cv.latest_analysis.match_score >= 80 ? 'text-green-600' :
-                            cv.latest_analysis.match_score >= 60 ? 'text-yellow-600' : 'text-red-600'
+                            (cv.latest_analysis.match_score || 0) >= 80 ? 'text-green-600' :
+                            (cv.latest_analysis.match_score || 0) >= 60 ? 'text-yellow-600' : 'text-red-600'
                           }`}>
-                            {cv.latest_analysis.match_score}%
+                            {cv.latest_analysis.match_score || 0}%
                           </span>
                         </div>
                         <button
@@ -122,16 +114,20 @@ function MyCVsSection() {
                           View Details
                         </button>
                       </div>
-                      <p className="text-xs text-[#505A5B] mt-1 truncate">
-                        {cv.latest_analysis.job_description_preview}
+                      <p className="text-xs text-[#505A5B] mt-1 truncate" title={cv.latest_analysis.job_description_preview}>
+                        {cv.latest_analysis.job_description_preview || 'No description available'}
                       </p>
+                    </div>
+                  ) : (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                       <p className="text-sm text-gray-500">No analysis found for this CV.</p>
                     </div>
                   )}
                 </div>
                 
                 <button
-                  onClick={() => handleDeleteCV(cv.cv_id, cv.cv_title)}
-                  className="ml-4 px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200 transition-colors"
+                  onClick={() => handleDeleteCV(cv.cv_id, cv.cv_title)} // Gunakan fungsi delete dari parent
+                  className="ml-4 px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200 transition-colors h-fit"
                 >
                   Delete
                 </button>
@@ -141,10 +137,10 @@ function MyCVsSection() {
         </div>
       )}
 
-      {/* Analysis Detail Modal */}
+      {/* Analysis Detail Modal (Pop-up) */}
       {selectedAnalysis && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-[#343F3E]">Analysis Details</h3>
               <button
@@ -155,93 +151,15 @@ function MyCVsSection() {
               </button>
             </div>
             
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#F8FAFF] p-4 rounded-lg">
-                  <h4 className="font-semibold text-[#343F3E]">Match Score</h4>
-                  <div className={`text-2xl font-bold mt-2 ${
-                    selectedAnalysis.match_score >= 80 ? 'text-green-600' :
-                    selectedAnalysis.match_score >= 60 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {selectedAnalysis.match_score}%
-                  </div>
-                </div>
-                
-                <div className="bg-[#F8FAFF] p-4 rounded-lg">
-                  <h4 className="font-semibold text-[#343F3E]">Analyzed At</h4>
-                  <p className="text-[#505A5B] mt-2">
-                    {new Date(selectedAnalysis.analyzed_at).toLocaleString()}
-                  </p>
-                </div>
+            {/* Tampilkan komponen AnalysisResults di dalam modal */}
+            {modalLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="w-8 h-8 border-2 border-[#94B0DA] border-t-transparent rounded-full animate-spin"></div>
               </div>
-
-              <div className="bg-[#F8FAFF] p-4 rounded-lg">
-                <h4 className="font-semibold text-[#343F3E] mb-2">Job Description</h4>
-                <p className="text-[#505A5B] whitespace-pre-wrap">
-                  {selectedAnalysis.job_description}
-                </p>
-              </div>
-
-              {selectedAnalysis.keyword_analysis && (
-                <div className="bg-[#F8FAFF] p-4 rounded-lg">
-                  <h4 className="font-semibold text-[#343F3E] mb-2">Keyword Analysis</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h5 className="font-medium text-green-600 mb-1">Matched Keywords</h5>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedAnalysis.keyword_analysis.matched_keywords?.map((keyword, index) => (
-                          <span key={index} className="px-2 py-1 bg-green-100 text-green-800 text-sm rounded">
-                            {keyword}
-                          </span>
-                        )) || <span className="text-[#505A5B]">None</span>}
-                      </div>
-                    </div>
-                    <div>
-                      <h5 className="font-medium text-red-600 mb-1">Missing Keywords</h5>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedAnalysis.keyword_analysis.missing_keywords?.map((keyword, index) => (
-                          <span key={index} className="px-2 py-1 bg-red-100 text-red-800 text-sm rounded">
-                            {keyword}
-                          </span>
-                        )) || <span className="text-[#505A5B]">None</span>}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {selectedAnalysis.ats_check_result && (
-                <div className="bg-[#F8FAFF] p-4 rounded-lg">
-                  <h4 className="font-semibold text-[#343F3E] mb-2">ATS Check Results</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Contact Info Found:</span>
-                      <span className={selectedAnalysis.ats_check_result.contact_info?.email_found ? 'text-green-600' : 'text-red-600'}>
-                        {selectedAnalysis.ats_check_result.contact_info?.email_found ? '✓' : '✗'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Experience Section:</span>
-                      <span className={selectedAnalysis.ats_check_result.common_sections?.experience ? 'text-green-600' : 'text-red-600'}>
-                        {selectedAnalysis.ats_check_result.common_sections?.experience ? '✓' : '✗'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Education Section:</span>
-                      <span className={selectedAnalysis.ats_check_result.common_sections?.education ? 'text-green-600' : 'text-red-600'}>
-                        {selectedAnalysis.ats_check_result.common_sections?.education ? '✓' : '✗'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Skills Section:</span>
-                      <span className={selectedAnalysis.ats_check_result.common_sections?.skills ? 'text-green-600' : 'text-red-600'}>
-                        {selectedAnalysis.ats_check_result.common_sections?.skills ? '✓' : '✗'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            ) : (
+              <AnalysisResults analysisData={selectedAnalysis} />
+            )}
+            
           </div>
         </div>
       )}
