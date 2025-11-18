@@ -5,8 +5,8 @@ import { jwtDecode } from "jwt-decode";
 
 // Definisikan routes yang boleh diakses oleh masing-masing role
 const allowedRoutes = {
-  user: ["/user-cv-analysis", "/user-test", "/fill-data", "/preview"],
-  hr: ["/hr-test", "/hr-screening", "/hr-ranking", "/user-cv-analysis", "/user-test"],
+  user: ["/user-cv-analysis", "/user-test", "/fill-data", "/preview", "/user-cv-analysis"],
+  hr: ["/hr-test", "/hr-screening", "/hr-ranking"],
   admin: ["/user-cv-analysis", "/user-test", "/hr-test", "/hr-screening", "/admin-dashboard"]
 };
 
