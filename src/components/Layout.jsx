@@ -60,13 +60,13 @@ export default function Layout({ children }) {
       });
     }
     
-    if (userAllowedRoutes.includes("/user-test")) {
-      items.push({
-        label: "CV Generator", 
-        path: "/user-test",
-        icon: "🎨"
-      });
-    }
+    // if (userAllowedRoutes.includes("/user-test")) {
+    //   items.push({
+    //     label: "CV Generator", 
+    //     path: "/user-test",
+    //     icon: "🎨"
+    //   });
+    // }
     
     if (userAllowedRoutes.includes("/hr-test")) {
       items.push({
