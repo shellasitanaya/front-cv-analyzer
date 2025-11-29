@@ -84,13 +84,13 @@ export default function Layout({ children }) {
       });
     }
     
-    if (userAllowedRoutes.includes("/hr-ranking")) {
-      items.push({
-        label: "Ranking",
-        path: "/hr-ranking",
-        icon: "🏆"
-      });
-    }
+    // if (userAllowedRoutes.includes("/hr-ranking")) {
+    //   items.push({
+    //     label: "Ranking",
+    //     path: "/hr-ranking",
+    //     icon: "🏆"
+    //   });
+    // }
     
     if (userAllowedRoutes.includes("/admin-dashboard")) {
       items.push({
@@ -154,7 +154,7 @@ export default function Layout({ children }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto bg-[#DCEDFF]">
         {children}
       </main>
     </div>
