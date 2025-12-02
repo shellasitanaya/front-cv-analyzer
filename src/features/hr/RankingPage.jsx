@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaUserCircle } from "react-icons/fa";
+// Changed from react-icons to lucide-react to avoid build errors
+import { User, Check } from "lucide-react";
 
 function RankingPage() {
   const { jobId } = useParams();
@@ -9,6 +10,9 @@ function RankingPage() {
   const [candidates, setCandidates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState("match_score");
+
+  // --- SELECTION STATE (NEW) ---
+  const [selectedIds, setSelectedIds] = useState([]);
 
   // --- STATE PAGINASI ---
   const [currentPage, setCurrentPage] = useState(1);
@@ -74,12 +78,58 @@ function RankingPage() {
     navigate(`/candidate-details/${candidateId}`);
   };
 
+  // --- SELECTION HANDLERS (NEW) ---
+  const toggleSelection = (candidateId) => {
+    if (selectedIds.includes(candidateId)) {
+      setSelectedIds(selectedIds.filter((id) => id !== candidateId));
+    } else {
+      if (selectedIds.length >= 3) {
+        // You could use a toast notification here instead of alert
+        alert("You can only compare up to 3 candidates at a time.");
+        return;
+      }
+      setSelectedIds([...selectedIds, candidateId]);
+    }
+  };
+
+  const handleCompare = () => {
+    const candidatesToCompare = candidates.filter((c) =>
+      selectedIds.includes(c.id)
+    );
+
+    console.log("COMPARE DATA:", candidatesToCompare); // Debug
+
+    navigate("/compare-candidates", {
+      state: { candidates: candidatesToCompare },
+    });
+  };
+
+
   if (isLoading) {
     return <div className="p-8">Loading ranked candidates...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 relative">
+      
+      {/* --- FLOATING COMPARE BUTTON (NEW) --- */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-50 animate-bounce-in">
+          <button
+            onClick={handleCompare}
+            disabled={selectedIds.length < 2}
+            className={`flex items-center gap-2 px-6 py-3 rounded-full shadow-2xl font-bold transition-all transform hover:scale-105 ${
+              selectedIds.length < 2
+                ? "bg-gray-400 cursor-not-allowed text-gray-200"
+                : "bg-blue-600 hover:bg-blue-700 text-white"
+            }`}
+          >
+            <span>Compare Candidates ({selectedIds.length}/3)</span>
+            {selectedIds.length >= 2 && <Check size={18} />}
+          </button>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         <button
           onClick={() => navigate(-1)}
@@ -122,11 +172,12 @@ function RankingPage() {
                   </div>
                 </div>
 
-                {/* --- JUDUL KOLOM (GRID 15) --- */}
+                {/* --- JUDUL KOLOM (GRID 16 - Added Select Column) --- */}
                 <div
                   className="grid gap-4 px-4 py-2 text-xs font-bold text-gray-500 uppercase border-b"
-                  style={{ gridTemplateColumns: "repeat(15, minmax(0, 1fr))" }}
+                  style={{ gridTemplateColumns: "repeat(16, minmax(0, 1fr))" }}
                 >
+                  <div className="col-span-1 text-center">Select</div> {/* NEW */}
                   <div className="col-span-1">Rank</div>
                   <div className="col-span-4">Candidate</div>
                   <div className="col-span-1 text-center">Score</div>
@@ -144,6 +195,9 @@ function RankingPage() {
                     const score = candidate.match_score || 0;
                     let textColorClass = "text-green-600";
                     let barColorClass = "bg-green-500";
+                    
+                    // Check if selected
+                    const isSelected = selectedIds.includes(candidate.id);
 
                     if (score < 50) {
                       textColorClass = "text-red-600";
@@ -156,12 +210,24 @@ function RankingPage() {
                     return (
                       <div
                         key={candidate.id}
-                        className="grid gap-4 items-center p-4 border rounded-lg hover:shadow-lg transition-shadow"
-                        // GRID 15
+                        className={`grid gap-4 items-center p-4 border rounded-lg hover:shadow-lg transition-all ${
+                          isSelected ? "bg-blue-50 border-blue-300 ring-1 ring-blue-300" : "bg-white"
+                        }`}
+                        // GRID 16
                         style={{
-                          gridTemplateColumns: "repeat(15, minmax(0, 1fr))",
+                          gridTemplateColumns: "repeat(16, minmax(0, 1fr))",
                         }}
                       >
+                         {/* Checkbox (1) - NEW */}
+                        <div className="col-span-1 flex justify-center">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelection(candidate.id)}
+                            className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 cursor-pointer"
+                          />
+                        </div>
+
                         {/* Rank (1) */}
                         <div className="col-span-1 text-center font-bold text-xl text-gray-500">
                           {(currentPage - 1) * rowsPerPage + index + 1}
@@ -169,7 +235,8 @@ function RankingPage() {
 
                         {/* Candidate Info (4) */}
                         <div className="col-span-4 flex items-center gap-3 overflow-hidden">
-                          <FaUserCircle className="text-3xl text-gray-400 flex-shrink-0" />
+                          {/* Replaced FaUserCircle with User from lucide-react */}
+                          <User size={32} className="text-gray-400 flex-shrink-0" />
                           <div className="min-w-0">
                             <p
                               className="font-bold text-gray-800 truncate"
@@ -260,7 +327,7 @@ function RankingPage() {
                         <div className="col-span-1 flex justify-center">
                           <button
                             onClick={() => handleViewDetails(candidate.id)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-medium px-2 py-2 m-4 rounded-md transition-colors shadow-sm whitespace-nowrap"
+                            className="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 text-[11px] font-medium px-2 py-2 m-4 rounded-md transition-colors shadow-sm whitespace-nowrap"
                           >
                             See Details
                           </button>

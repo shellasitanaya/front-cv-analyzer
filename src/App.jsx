@@ -20,6 +20,7 @@ import HRTest from "./pages/hr/HRTest";
 import ScreeningPage from "./features/hr/ScreeningPage";
 import RankingPage from "./features/hr/RankingPage";
 import JobPosting from "./pages/hr/JobPosting";
+import CompareCandidatesPage from "./features/hr/pages/CompareCandidatesPage";
 
 // Admin Pages (future expansion)
 // import AdminDashboardPage from "./pages/admin/AdminDashboard";
@@ -107,6 +108,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["hr", "admin"]}>
               <JobPosting />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/compare-candidates"
+          element={
+            <ProtectedRoute allowedRoles={["hr", "admin"]}>
+              <CompareCandidatesPage />
             </ProtectedRoute>
           }
         />
