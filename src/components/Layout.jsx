@@ -20,7 +20,7 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/");
+    navigate("/login");
   };
 
   const handleNavigation = (path, hash = "") => {
@@ -47,7 +47,7 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
        // Menu HR tetap konsisten
        items = [
          { label: "Dashboard", path: "/user-cv-analysis", hash: "" }, // HR juga butuh akses dashboard user
-         { label: "Candidate Search", path: "/hr-test" },
+         { label: "Candidate Search", path: "/talent-pool" },
          { label: "Screening", path: "/hr-screening" },
        ];
     } 
@@ -62,7 +62,7 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
         // Tambahkan menu HR di bawah jika dia HR
         ...(userRole === 'hr' || userRole === 'admin' ? [
             { label: "--- HR Tools ---", path: "#", disabled: true },
-            { label: "Candidate Search", path: "/hr-test" },
+            { label: "Candidate Search", path: "/talent-pool" },
             { label: "Screening", path: "/hr-screening" }
         ] : [])
       ];
@@ -74,7 +74,7 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
         // Tambahkan menu HR di bawah jika dia HR
         ...(userRole === 'hr' || userRole === 'admin' ? [
             { label: "--- HR Tools ---", path: "#", disabled: true },
-            { label: "Candidate Search", path: "/hr-test" },
+            { label: "Candidate Search", path: "/talent-pool" },
             { label: "Screening", path: "/hr-screening" }
         ] : [])
       ];

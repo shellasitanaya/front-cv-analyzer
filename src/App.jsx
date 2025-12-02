@@ -71,7 +71,7 @@ export default function App() {
 
         {/* ---------- HR ROUTES ---------- */}
         <Route
-          path="/hr-test"
+          path="/talent-pool"
           element={
             <ProtectedRoute allowedRoles={["hr", "admin"]}>
               <HRTest />

@@ -27,7 +27,7 @@ export default function LoginPage() {
 
   const redirectByRole = (userRole) => {
     if (userRole === "user") navigate("/user-cv-analysis");
-    else if (userRole === "hr") navigate("/hr-test");
+    else if (userRole === "hr") navigate("/talent-pool");
     else if (userRole === "admin") navigate("/user-cv-analysis");
   };
 
