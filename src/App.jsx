@@ -9,10 +9,9 @@ import LoginPage from "./pages/Login";
 import AdminLoginPage from "./pages/admin/AdminLogin";
 
 // User Pages
-import UserTest from "./pages/js/UserTest";
 import FillData from "./pages/js/FillData";
 import PreviewCV from "./pages/js/PreviewCV";
-import UserCVAnalysisPage from "./pages/UserCVAnalysisPage"; // ✅ PATH DIPERBAIKI
+import UserCVAnalysisPage from "./pages/UserCVAnalysisPage";
 
 // HR Pages
 import HRTest from "./pages/hr/HRTest";
@@ -46,14 +45,6 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["user", "hr", "admin"]}>
               <UserCVAnalysisPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/user-test"
-          element={
-            <ProtectedRoute allowedRoles={["user", "admin"]}>
-              <UserTest />
             </ProtectedRoute>
           }
         />

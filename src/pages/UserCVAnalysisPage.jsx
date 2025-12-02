@@ -1,57 +1,79 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Layout from '../components/Layout';
-import CVUploadSection from '../features/user/CVUploadSection';
-import MyCVsSection from '../features/user/MyCVsSection';
-import AnalysisResults from '../features/user/AnalysisResults';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import Layout from '../components/Layout'; 
+
+// Import fitur Analisis
+import CVUploadSection from '../features/user/CVUploadSection'; 
+import MyCVsSection from '../features/user/MyCVsSection'; 
+import AnalysisSummary from '../features/user/AnalysisSummary'; 
 import ImprovementSuggestions from '../features/user/ImprovementSuggestions';
-import FillData from '../pages/js/FillData'; // Import FillData component
-import PreviewCV from '../pages/js/PreviewCV'; // Import PreviewCV component
+
+// Import fitur Generator (Langsung import komponennya, tidak lewat Section perantara)
+import FillData from './js/FillData';   // Sesuaikan path import Anda
+import PreviewCV from './js/PreviewCV'; // Sesuaikan path import Anda
 
 function UserCVAnalysisPage() {
-  const [activeTab, setActiveTab] = useState('analyze'); // 'analyze' or 'generate'
-  const [analysisData, setAnalysisData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState(null);
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState('analyze'); // 'analyze' | 'generate'
   
-  // State untuk CV Generator
-  const [cvStep, setCvStep] = useState('template'); // 'template', 'fill-data', 'preview'
+  // --- STATE ANALISIS ---
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // --- STATE GENERATOR (Logika Lama yang Stabil) ---
+  const [cvStep, setCvStep] = useState('template'); // 'template' -> 'fill-data' -> 'preview'
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [formData, setFormData] = useState(null);
-
-  const navigate = useNavigate();
-
+  const [cvFormData, setCvFormData] = useState(null); // Data form manual
+  
   const templates = [
     { id: "modern", name: "Modern", img: "/static/images/modern.png" },
     { id: "classic", name: "Classic", img: "/static/images/classic.png" },
     { id: "minimalist", name: "Minimalist", img: "/static/images/minimalist.png" },
   ];
 
-  const handleAnalysisComplete = (data) => {
-    setAnalysisData(data);
+  // --- LOGIKA AUTO SCROLL ---
+  useEffect(() => {
+    if (location.state?.scrollTo) {
+      const element = document.getElementById(location.state.scrollTo);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }, [location]);
+
+  // --- HANDLER ANALISIS ---
+  const handleAnalysisComplete = (result) => {
+    if (result && result.match_score !== undefined) {
+      setAnalysisResult(result);
+      setAnalysisLoading(false);
+      setRefreshTrigger(prev => prev + 1);
+      setTimeout(() => {
+        document.getElementById('analysis-result-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    } else {
+      setAnalysisLoading(false);
+      alert("Gagal mendapatkan hasil analisis.");
+    }
   };
 
   const handleNewUpload = () => {
-    setAnalysisData(null);
-    setUploadedFile(null);
+    setAnalysisResult(null); 
   };
 
-  // CV Generator Handlers
+  // --- HANDLER GENERATOR CV (Inti Perbaikan) ---
   const handleTemplateSelect = (templateId) => {
     setSelectedTemplate(templateId);
-  };
-
-  const handleTemplateNext = () => {
-    if (!selectedTemplate) {
-      alert("Pilih template terlebih dahulu!");
-      return;
-    }
-    setCvStep('fill-data');
+    setCvStep('fill-data'); // Pindah ke isi data
   };
 
   const handleFillDataComplete = (data) => {
-    setFormData(data);
-    setCvStep('preview');
+    console.log("Data diterima dari form:", data);
+    setCvFormData(data);
+    setCvStep('preview'); // Pindah ke preview & generate
   };
 
   const handleBackToTemplate = () => {
@@ -66,146 +88,132 @@ function UserCVAnalysisPage() {
   const handleRestartCV = () => {
     setCvStep('template');
     setSelectedTemplate(null);
-    setFormData(null);
+    setCvFormData(null);
   };
 
-  // Render CV Generator Steps
-  const renderCVGenerator = () => {
-    switch (cvStep) {
-      case 'template':
-        return (
-          <div className="bg-white shadow-md rounded-xl p-8 w-full max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-6 text-center text-gray-700">
-              Pilih Template CV
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-              {templates.map((tpl) => (
-                <div
-                  key={tpl.id}
-                  className={`border rounded-lg p-4 cursor-pointer transition-all duration-300 hover:shadow-lg ${
-                    selectedTemplate === tpl.id ? "border-blue-500" : "border-gray-300"
-                  }`}
-                  onClick={() => handleTemplateSelect(tpl.id)}
-                >
-                  <img
-                    src={tpl.img}
-                    alt={tpl.name}
-                    className="w-full h-48 object-cover rounded-md mb-3"
-                  />
-                  <p className="text-center font-medium text-gray-600">{tpl.name}</p>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={handleTemplateNext}
-              disabled={!selectedTemplate}
-              className={`w-full py-3 rounded-md text-white text-lg font-semibold ${
-                selectedTemplate
-                  ? "bg-blue-600 hover:bg-blue-700"
-                  : "bg-gray-400 cursor-not-allowed"
-              }`}
-            >
-              Lanjut Isi Data
-            </button>
-          </div>
-        );
-
-      case 'fill-data':
-        return (
-          <FillData 
-            template={selectedTemplate}
-            onComplete={handleFillDataComplete}
-            onBack={handleBackToTemplate}
-          />
-        );
-
-      case 'preview':
-        return (
-          <PreviewCV 
-            formData={formData}
-            template={selectedTemplate}
-            onBack={handleBackToFillData}
-            onRestart={handleRestartCV}
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
-
+  // --- RENDER COMPONENT ---
   return (
-    <Layout>
-      <div className="min-h-screen bg-[#DCEDFF] py-8">
-        <div className="max-w-6xl mx-auto px-4">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-[#343F3E] mb-4">
-              Smart CV Analyzer
-            </h1>
-            <p className="text-lg text-[#505A5B]">
-              Upload your CV to get instant analysis and improvement suggestions
-            </p>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="flex border-b border-[#94B0DA] mb-8">
+    <Layout activeFeature={activeTab}>
+      <div className="space-y-8 min-h-screen">
+        
+        {/* TAB NAVIGATION */}
+        <div className="border-b border-gray-200 sticky top-20 bg-[#F8FAFF] z-10 pt-2">
+          <div className="flex gap-8">
             <button
-              className={`px-6 py-3 font-semibold transition-colors ${
-                activeTab === 'analyze'
-                  ? 'text-[#94B0DA] border-b-2 border-[#94B0DA]'
-                  : 'text-[#8F91A2] hover:text-[#505A5B]'
-              }`}
               onClick={() => setActiveTab('analyze')}
+              className={`pb-3 text-sm font-bold transition-all relative ${
+                activeTab === 'analyze' ? 'text-[#94B0DA]' : 'text-slate-400 hover:text-slate-600'
+              }`}
             >
               CV Analysis
+              {activeTab === 'analyze' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#94B0DA] rounded-t-full"></div>}
             </button>
             <button
-              className={`px-6 py-3 font-semibold transition-colors ${
-                activeTab === 'generate'
-                  ? 'text-[#94B0DA] border-b-2 border-[#94B0DA]'
-                  : 'text-[#8F91A2] hover:text-[#505A5B]'
-              }`}
               onClick={() => setActiveTab('generate')}
+              className={`pb-3 text-sm font-bold transition-all relative ${
+                activeTab === 'generate' ? 'text-[#94B0DA]' : 'text-slate-400 hover:text-slate-600'
+              }`}
             >
               CV Generator
+              {activeTab === 'generate' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#94B0DA] rounded-t-full"></div>}
             </button>
           </div>
+        </div>
 
-          {/* Content based on active tab */}
-          {activeTab === 'analyze' ? (
-            <>
-              {/* Upload Section */}
-              <div className="mb-8">
+        <div className="pt-2">
+          {/* === MODE ANALISIS === */}
+          {activeTab === 'analyze' && (
+            <div className="space-y-12 animate-fade-in">
+              <div id="upload-section" className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                 <CVUploadSection
                   onAnalysisComplete={handleAnalysisComplete}
-                  isLoading={isLoading}
-                  setIsLoading={setIsLoading}
+                  isLoading={analysisLoading}
+                  setIsLoading={setAnalysisLoading}
                   onNewUpload={handleNewUpload}
                   uploadedFile={uploadedFile}
                   setUploadedFile={setUploadedFile}
                 />
               </div>
 
-              {/* My CVs Section */}
-              <div className="mb-8">
-                <MyCVsSection />
-              </div>
-
-              {/* Analysis Results */}
-              {analysisData && (
-                <div className="space-y-8">
-                  <AnalysisResults analysisData={analysisData} />
-                  <ImprovementSuggestions suggestions={analysisData.suggestions} />
+              {analysisLoading && (
+                <div className="bg-white rounded-[32px] p-12 text-center border border-gray-100 shadow-sm animate-pulse">
+                  <div className="w-16 h-16 border-4 border-[#94B0DA] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <h3 className="text-xl font-bold text-[#343F3E]">AI is analyzing...</h3>
                 </div>
               )}
-            </>
-          ) : (
-            /* CV Generator Section */
-            <div className="flex justify-center">
-              {renderCVGenerator()}
+
+              {analysisResult && !analysisLoading && (
+                <div id="analysis-result-section" className="space-y-8 animate-slide-up scroll-mt-24">
+                  <AnalysisSummary analysisData={analysisResult} />
+                  {!analysisResult.gemini_result && (
+                     <ImprovementSuggestions analysisData={analysisResult} />
+                  )}
+                </div>
+              )}
+
+              <div id="history-section" className="scroll-mt-24">
+                <h3 className="text-lg font-bold text-[#343F3E] mb-4 ml-1">Recent Analysis History</h3>
+                <MyCVsSection key={refreshTrigger} />
+              </div>
+            </div>
+          )}
+
+          {/* === MODE GENERATOR (Logika Lama + Tampilan Baru) === */}
+          {activeTab === 'generate' && (
+            <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 min-h-[600px] animate-fade-in">
+              
+              {/* Step 1: Pilih Template */}
+              {cvStep === 'template' && (
+                <div className="animate-fade-in text-center">
+                  <h2 className="text-2xl font-bold text-[#343F3E] mb-2">Pilih Template CV</h2>
+                  <p className="text-[#8F91A2] mb-10">Pilih desain profesional untuk memulai.</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {templates.map((tpl) => (
+                      <div 
+                        key={tpl.id}
+                        className={`group border-2 rounded-2xl p-4 cursor-pointer transition-all duration-200 ${
+                          selectedTemplate === tpl.id 
+                            ? "border-[#94B0DA] bg-blue-50/30 shadow-md" 
+                            : "border-gray-100 hover:border-[#94B0DA] hover:shadow-sm"
+                        }`}
+                        onClick={() => handleTemplateSelect(tpl.id)}
+                      >
+                        <div className="aspect-[3/4] bg-gray-100 rounded-xl mb-4 overflow-hidden relative">
+                           {tpl.img ? <img src={tpl.img} alt={tpl.name} className="w-full h-full object-cover" /> : <span className="flex items-center justify-center h-full text-4xl">📄</span>}
+                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
+                              <button className="bg-white text-[#343F3E] px-4 py-2 rounded-full font-bold text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all shadow-lg">Pilih</button>
+                           </div>
+                        </div>
+                        <h3 className="font-bold text-[#343F3E] text-lg">{tpl.name}</h3>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Isi Data */}
+              {cvStep === 'fill-data' && (
+                <div className="animate-slide-up">
+                  <FillData 
+                    template={selectedTemplate}
+                    onComplete={handleFillDataComplete} 
+                    onBack={handleBackToTemplate}
+                  />
+                </div>
+              )}
+
+              {/* Step 3: Preview & Generate */}
+              {cvStep === 'preview' && (
+                <div className="animate-fade-in">
+                  <PreviewCV 
+                    formData={cvFormData}
+                    template={selectedTemplate}
+                    onBack={handleBackToFillData}
+                    onRestart={handleRestartCV}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
