@@ -48,14 +48,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/user-test"
-          element={
-            <ProtectedRoute allowedRoles={["user", "admin"]}>
-              <UserTest />
-            </ProtectedRoute>
-          }
-        />
 
         <Route 
           path="/fill-data" 
