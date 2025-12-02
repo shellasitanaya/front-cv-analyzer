@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 // Auth Pages
 import LoginPage from "./pages/Login";
 import AdminLoginPage from "./pages/admin/AdminLogin";
+import RegisterPage from "./features/Auth/pages/RegistrationPage";
 
 // User Pages
 import UserTest from "./pages/js/UserTest";
@@ -37,6 +38,7 @@ export default function App() {
       <Routes>
         {/* ---------- AUTHENTICATION ---------- */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
