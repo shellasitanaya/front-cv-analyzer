@@ -35,7 +35,7 @@ export default function App() {
     <Router>
       <Routes>
         {/* ---------- AUTHENTICATION ---------- */}
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
@@ -48,6 +48,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/user-test"
+          element={
+            <ProtectedRoute allowedRoles={["user", "admin"]}>
+              <UserTest />
+            </ProtectedRoute>
+          }
+        />
+
         <Route 
           path="/fill-data" 
           element={

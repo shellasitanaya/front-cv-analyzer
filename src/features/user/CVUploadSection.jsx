@@ -36,6 +36,7 @@ function CVUploadSection({ onAnalysisComplete, isLoading, setIsLoading, onNewUpl
   };
 
   const handleDrop = (e) => {
+    console.log('🔍 handleDrop triggered!', e.dataTransfer.files);
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
