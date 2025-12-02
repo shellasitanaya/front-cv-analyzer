@@ -1,7 +1,16 @@
 import React, { useState } from "react";
-// Layout dihapus agar tidak double layout
 
 function FillData({ template, onComplete, onBack }) {
+  // --- KONFIGURASI DROPDOWN ---
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", 
+    "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
+  ];
+  
+  // Generate tahun dari 2030 mundur ke 1980
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 51 }, (_, i) => currentYear + 5 - i);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -11,8 +20,8 @@ function FillData({ template, onComplete, onBack }) {
       {
         job_title: "",
         company_name: "",
-        start_date: "",
-        end_date: "",
+        start_date: "", // Format: "Jan 2023"
+        end_date: "",   // Format: "Des 2024" atau "Sekarang"
         description: ""
       }
     ],
@@ -30,10 +39,52 @@ function FillData({ template, onComplete, onBack }) {
 
   const [errors, setErrors] = useState({});
 
+  // --- HELPER FUNGSI UNTUK MENGURUS TANGGAL ---
+  
+  // Memecah string "Jan 2023" menjadi { month: "Jan", year: "2023" }
+  const parseDate = (dateString) => {
+    if (!dateString || dateString === "Sekarang") return { month: "", year: "" };
+    const parts = dateString.split(" ");
+    return { month: parts[0] || "", year: parts[1] || "" };
+  };
+
+  // Handler khusus untuk mengubah Bulan/Tahun pada Pengalaman Kerja
+  const handleDateChange = (index, field, part, value) => {
+    const updatedExperience = [...formData.experience];
+    const currentExp = updatedExperience[index];
+    
+    // Ambil nilai lama
+    const { month, year } = parseDate(currentExp[field]);
+    
+    let newDateString = "";
+    
+    if (part === "month") {
+      // Jika tahun belum dipilih, biarkan kosong dulu atau paksa user pilih tahun nanti
+      newDateString = value ? `${value} ${year}`.trim() : year; 
+    } else if (part === "year") {
+      newDateString = value ? `${month} ${value}`.trim() : month;
+    }
+
+    updatedExperience[index][field] = newDateString;
+    setFormData({ ...formData, experience: updatedExperience });
+  };
+
+  // Handler untuk Checkbox "Masih Bekerja"
+  const handleCurrentlyWorking = (index, isChecked) => {
+    const updatedExperience = [...formData.experience];
+    if (isChecked) {
+      updatedExperience[index].end_date = "Sekarang";
+    } else {
+      updatedExperience[index].end_date = ""; // Reset jadi kosong agar bisa dipilih lagi
+    }
+    setFormData({ ...formData, experience: updatedExperience });
+  };
+
+  // --- HANDLER STANDAR ---
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    // Clear error when user types
     if (errors[name]) {
       setErrors({ ...errors, [name]: null });
     }
@@ -50,7 +101,6 @@ function FillData({ template, onComplete, onBack }) {
     updatedEducation[index][field] = value;
     setFormData({ ...formData, education: updatedEducation });
     
-    // Clear specific array error
     const errorKey = `edu_${index}_${field}`;
     if (errors[errorKey]) {
       setErrors({ ...errors, [errorKey]: null });
@@ -62,13 +112,7 @@ function FillData({ template, onComplete, onBack }) {
       ...formData,
       experience: [
         ...formData.experience,
-        {
-          job_title: "",
-          company_name: "",
-          start_date: "",
-          end_date: "",
-          description: ""
-        }
+        { job_title: "", company_name: "", start_date: "", end_date: "", description: "" }
       ]
     });
   };
@@ -78,13 +122,7 @@ function FillData({ template, onComplete, onBack }) {
       ...formData,
       education: [
         ...formData.education,
-        {
-          degree: "",
-          university: "",
-          graduation_year: "",
-          major: "",
-          gpa: ""
-        }
+        { degree: "", university: "", graduation_year: "", major: "", gpa: "" }
       ]
     });
   };
@@ -100,72 +138,42 @@ function FillData({ template, onComplete, onBack }) {
     if (formData.education.length > 1) {
       const updatedEducation = formData.education.filter((_, i) => i !== index);
       setFormData({ ...formData, education: updatedEducation });
-      
-      // Clean up errors for removed item (optional simplification)
       setErrors({}); 
     }
   };
 
+  // --- VALIDASI ---
   const validateForm = () => {
     const newErrors = {};
     let isValid = true;
 
-    // 1. Validasi Nama (Hanya Huruf)
-    if (!formData.name.trim()) {
-      newErrors.name = "Nama wajib diisi";
-      isValid = false;
-    } else if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
-      newErrors.name = "Nama harus berupa huruf (tidak boleh angka/simbol)";
-      isValid = false;
-    }
+    if (!formData.name.trim()) { newErrors.name = "Nama wajib diisi"; isValid = false; }
+    else if (!/^[a-zA-Z\s]+$/.test(formData.name)) { newErrors.name = "Nama harus berupa huruf"; isValid = false; }
 
-    // 2. Validasi Email (Format Email)
-    if (!formData.email.trim()) {
-      newErrors.email = "Email wajib diisi";
-      isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Format email tidak valid";
-      isValid = false;
-    }
+    if (!formData.email.trim()) { newErrors.email = "Email wajib diisi"; isValid = false; }
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) { newErrors.email = "Format email tidak valid"; isValid = false; }
 
-    // 3. Validasi No. Telepon (Hanya Angka)
-    if (formData.phone && !/^\d+$/.test(formData.phone)) {
-      newErrors.phone = "Nomor telepon harus berupa angka";
-      isValid = false;
-    }
+    if (formData.phone && !/^\d+$/.test(formData.phone)) { newErrors.phone = "Nomor telepon harus berupa angka"; isValid = false; }
 
-    // 4. Validasi Pengalaman Kerja (Cek kekosongan dasar saja, konten "bebas")
-    const hasEmptyCompany = formData.experience.some(exp => 
-      !exp.company_name || exp.company_name.trim() === ""
-    );
-    if (hasEmptyCompany) {
-      alert("Harap isi nama perusahaan untuk semua pengalaman kerja!");
-      isValid = false;
-    }
+    const hasEmptyCompany = formData.experience.some(exp => !exp.company_name || exp.company_name.trim() === "");
+    if (hasEmptyCompany) { alert("Harap isi nama perusahaan untuk semua pengalaman kerja!"); isValid = false; }
 
-    // 5. Validasi Pendidikan
     formData.education.forEach((edu, index) => {
-      // Cek Universitas kosong
       if (!edu.university || edu.university.trim() === "") {
         alert(`Harap isi nama universitas untuk pendidikan ke-${index + 1}!`);
         isValid = false;
       }
-
-      // Tahun Lulus (Hanya Angka)
-      if (edu.graduation_year && !/^\d+$/.test(edu.graduation_year)) {
-        newErrors[`edu_${index}_graduation_year`] = "Tahun harus berupa angka";
-        isValid = false;
+      // Tahun Lulus sekarang dropdown, pasti angka, tapi cek jika kosong
+      if (!edu.graduation_year) {
+         // Optional: bisa tambah validasi required jika mau
       }
 
-      // Jurusan (Hanya Huruf)
       if (edu.major && !/^[a-zA-Z\s]+$/.test(edu.major)) {
         newErrors[`edu_${index}_major`] = "Jurusan harus berupa huruf";
         isValid = false;
       }
 
-      // IPK (Format 4.00 atau 3.99)
       if (edu.gpa) {
-        // Regex: Angka 0-3 diikuti . dua digit ATAU angka 4 diikuti .00
         const gpaRegex = /^([0-3]\.\d{2}|4\.00)$/;
         if (!gpaRegex.test(edu.gpa)) {
           newErrors[`edu_${index}_gpa`] = "Format IPK harus X.XX (contoh: 3.50 atau 4.00)";
@@ -180,31 +188,8 @@ function FillData({ template, onComplete, onBack }) {
 
   const handleGenerate = () => {
     if (validateForm()) {
-      const validatedExperience = formData.experience.map(exp => ({
-        job_title: exp.job_title?.trim() || "",
-        company_name: exp.company_name?.trim() || "",
-        start_date: exp.start_date?.trim() || "",
-        end_date: exp.end_date?.trim() || "",
-        description: exp.description?.trim() || ""
-      }));
-
-      const validatedEducation = formData.education.map(edu => ({
-        degree: edu.degree?.trim() || "",
-        university: edu.university?.trim() || "",
-        graduation_year: edu.graduation_year?.trim() || "",
-        major: edu.major?.trim() || "",
-        gpa: edu.gpa?.trim() || ""
-      }));
-
-      const validatedData = {
-        ...formData,
-        experience: validatedExperience,
-        education: validatedEducation
-      };
-
-      onComplete(validatedData);
+      onComplete(formData);
     } else {
-      // Optional: Scroll to top or alert user generally
       alert("Mohon perbaiki error yang tertera pada form.");
     }
   };
@@ -288,7 +273,7 @@ function FillData({ template, onComplete, onBack }) {
             <p className="text-sm text-gray-500 mt-1">Deskripsi singkat tentang profil profesional Anda (Bebas)</p>
           </div>
 
-          {/* Work Experience Section */}
+          {/* Work Experience Section (UPDATED) */}
           <div className="bg-orange-50 p-4 rounded-lg">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-700">Pengalaman Kerja</h3>
@@ -301,88 +286,132 @@ function FillData({ template, onComplete, onBack }) {
               </button>
             </div>
             
-            {formData.experience.map((exp, index) => (
-              <div key={index} className="border border-orange-200 rounded-md p-4 mb-4 bg-white">
-                <div className="flex justify-between items-center mb-3">
-                  <h4 className="font-medium text-gray-700">Pengalaman Kerja {index + 1}</h4>
-                  {formData.experience.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeExperience(index)}
-                      className="text-sm bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition duration-200"
-                    >
-                      Hapus
-                    </button>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Posisi *</label>
-                    <input
-                      type="text"
-                      value={exp.job_title}
-                      onChange={(e) => handleExperienceChange(index, 'job_title', e.target.value)}
-                      className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-orange-200 focus:border-orange-500"
-                      placeholder="Software Engineer"
-                      required
-                    />
+            {formData.experience.map((exp, index) => {
+              // Parse current dates for dropdown values
+              const startDate = parseDate(exp.start_date);
+              const endDate = parseDate(exp.end_date);
+              const isCurrentlyWorking = exp.end_date === "Sekarang";
+
+              return (
+                <div key={index} className="border border-orange-200 rounded-md p-4 mb-4 bg-white">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-medium text-gray-700">Pengalaman Kerja {index + 1}</h4>
+                    {formData.experience.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeExperience(index)}
+                        className="text-sm bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition duration-200"
+                      >
+                        Hapus
+                      </button>
+                    )}
                   </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Posisi *</label>
+                      <input
+                        type="text"
+                        value={exp.job_title}
+                        onChange={(e) => handleExperienceChange(index, 'job_title', e.target.value)}
+                        className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-orange-200 focus:border-orange-500"
+                        placeholder="Software Engineer"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Perusahaan *</label>
+                      <input
+                        type="text"
+                        value={exp.company_name}
+                        onChange={(e) => handleExperienceChange(index, 'company_name', e.target.value)}
+                        className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-orange-200 focus:border-orange-500"
+                        placeholder="PT Contoh Indonesia"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* DROPDOWN TANGGAL MULAI & SELESAI */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                    {/* Tanggal Mulai */}
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Tanggal Mulai</label>
+                      <div className="flex gap-2">
+                        <select 
+                          className="w-1/2 border rounded-md p-2 text-sm focus:ring-1 focus:ring-orange-200"
+                          value={startDate.month}
+                          onChange={(e) => handleDateChange(index, 'start_date', 'month', e.target.value)}
+                        >
+                          <option value="">Bulan</option>
+                          {months.map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                        <select 
+                          className="w-1/2 border rounded-md p-2 text-sm focus:ring-1 focus:ring-orange-200"
+                          value={startDate.year}
+                          onChange={(e) => handleDateChange(index, 'start_date', 'year', e.target.value)}
+                        >
+                          <option value="">Tahun</option>
+                          {years.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Tanggal Selesai */}
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Tanggal Selesai</label>
+                      <div className="flex gap-2 mb-2">
+                        <select 
+                          className="w-1/2 border rounded-md p-2 text-sm focus:ring-1 focus:ring-orange-200 disabled:bg-gray-100"
+                          value={isCurrentlyWorking ? "" : endDate.month}
+                          onChange={(e) => handleDateChange(index, 'end_date', 'month', e.target.value)}
+                          disabled={isCurrentlyWorking}
+                        >
+                          <option value="">Bulan</option>
+                          {months.map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                        <select 
+                          className="w-1/2 border rounded-md p-2 text-sm focus:ring-1 focus:ring-orange-200 disabled:bg-gray-100"
+                          value={isCurrentlyWorking ? "" : endDate.year}
+                          onChange={(e) => handleDateChange(index, 'end_date', 'year', e.target.value)}
+                          disabled={isCurrentlyWorking}
+                        >
+                          <option value="">Tahun</option>
+                          {years.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                      </div>
+                      
+                      {/* Checkbox Masih Aktif */}
+                      <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                        <input 
+                          type="checkbox"
+                          checked={isCurrentlyWorking}
+                          onChange={(e) => handleCurrentlyWorking(index, e.target.checked)}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        Saat ini saya aktif di sini
+                      </label>
+                    </div>
+                  </div>
+                  
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Perusahaan *</label>
-                    <input
-                      type="text"
-                      value={exp.company_name}
-                      onChange={(e) => handleExperienceChange(index, 'company_name', e.target.value)}
-                      className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-orange-200 focus:border-orange-500"
-                      placeholder="PT Contoh Indonesia"
-                      required
+                    <label className="block text-sm text-gray-600 mb-1">Deskripsi Pekerjaan</label>
+                    <textarea
+                      value={exp.description}
+                      onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
+                      className="w-full border rounded-md p-2 text-sm h-20 focus:ring-1 focus:ring-orange-200 focus:border-orange-500"
+                      placeholder="Deskripsikan tanggung jawab, pencapaian, dan keterampilan yang digunakan..."
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Gunakan bullet points dengan menekan Enter untuk baris baru (Bebas)
+                    </p>
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Tanggal Mulai</label>
-                    <input
-                      type="text"
-                      value={exp.start_date}
-                      onChange={(e) => handleExperienceChange(index, 'start_date', e.target.value)}
-                      className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-orange-200 focus:border-orange-500"
-                      placeholder="Jan 2020"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Contoh: Jan 2020</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Tanggal Selesai</label>
-                    <input
-                      type="text"
-                      value={exp.end_date}
-                      onChange={(e) => handleExperienceChange(index, 'end_date', e.target.value)}
-                      className="w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-orange-200 focus:border-orange-500"
-                      placeholder="Des 2022 / Sekarang"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Isi 'Sekarang' jika masih bekerja</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Deskripsi Pekerjaan</label>
-                  <textarea
-                    value={exp.description}
-                    onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
-                    className="w-full border rounded-md p-2 text-sm h-20 focus:ring-1 focus:ring-orange-200 focus:border-orange-500"
-                    placeholder="Deskripsikan tanggung jawab, pencapaian, dan keterampilan yang digunakan..."
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Gunakan bullet points dengan menekan Enter untuk baris baru (Bebas)
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Education Section */}
+          {/* Education Section (UPDATED) */}
           <div className="bg-purple-50 p-4 rounded-lg">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-700">Pendidikan</h3>
@@ -436,17 +465,20 @@ function FillData({ template, onComplete, onBack }) {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* TAHUN LULUS JADI DROPDOWN */}
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">Tahun Lulus</label>
-                    <input
-                      type="text"
+                    <select
                       value={edu.graduation_year}
                       onChange={(e) => handleEducationChange(index, 'graduation_year', e.target.value)}
                       className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-purple-200 focus:border-purple-500 ${errors[`edu_${index}_graduation_year`] ? 'border-red-500' : ''}`}
-                      placeholder="2020"
-                    />
+                    >
+                      <option value="">Pilih Tahun</option>
+                      {years.map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
                     {errors[`edu_${index}_graduation_year`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${index}_graduation_year`]}</p>}
                   </div>
+
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">Jurusan</label>
                     <input
@@ -498,8 +530,6 @@ function FillData({ template, onComplete, onBack }) {
               🚀 Generate CV
             </button>
           </div>
-
-          {/* Debug Info telah dihapus sesuai permintaan */}
         </form>
       </div>
     </div>
