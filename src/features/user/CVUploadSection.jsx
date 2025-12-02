@@ -1,88 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { AstraAPI, transformAstraAnalysis   } from "../../services/Api.js"; // Sesuaikan path ke file api.js
+import { jobSeekerApi } from '../../api/jobSeekerApi'; 
 
 function CVUploadSection({ onAnalysisComplete, isLoading, setIsLoading, onNewUpload, uploadedFile, setUploadedFile }) {
-  const [selectedJob, setSelectedJob] = useState('');
-  const [cvTitle, setCvTitle] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
   const [dragActive, setDragActive] = useState(false);
+  const [error, setError] = useState('');
 
-  const jobOptions = [
-    {
-      id: 'erp_business_analyst',
-      name: 'ERP Business Analyst Project - GSI',
-      description: 'Menilai dan menganalisa ERP existing pada lingkup Rumah Sakit, memberikan rekomendasi perbaikan, menyusun blueprint, dan membantu implementasi ERP'
-    },
-    {
-      id: 'it_data_engineer', 
-      name: 'IT Data Engineer - TAF',
-      description: 'Merancang dan mengimplementasikan sistem manajemen data yang andal untuk mendukung operasional perusahaan yang optimal'
+  useEffect(() => {
+    if (uploadedFile) setError('');
+  }, [uploadedFile]);
+
+  const validateAndSetFile = (file) => {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+       setError('File too large (Max 10MB).');
+       setUploadedFile(null);
+       return;
     }
-  ];
-
-  useEffect(() => {
-    console.log('📦 [CVUploadSection] uploadedFile:', uploadedFile);
-    console.log('📦 [CVUploadSection] cvTitle:', cvTitle);
-  }, [uploadedFile, cvTitle]);
-
-  useEffect(() => {
-    console.log('🔍 [Button State Debug]');
-    console.log('  isLoading:', isLoading);
-    console.log('  uploadedFile:', uploadedFile);
-    console.log('  selectedJob:', selectedJob);
-    console.log('  Button enabled?', !isLoading && !!uploadedFile && !!selectedJob);
-  }, [isLoading, uploadedFile, selectedJob]);
+    onNewUpload();
+    setUploadedFile(file);
+    setError('');
+  };
 
   const handleFileChange = (e) => {
-    console.log('🔍 handleFileChange triggered!', e.target.files);
-    const file = e.target.files[0];
-    console.log('📄 File selected:', file);
-    
-    if (file) {
-      console.log('File details:', {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
-      
-      // Validasi file
-      if (file.size > 10 * 1024 * 1024) {
-        alert('File size terlalu besar. Maksimal 10MB');
-        return;
-      }
-      
-      const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      if (!validTypes.includes(file.type)) {
-        console.log('❌ Invalid file type:', file.type);
-        alert('Format file tidak didukung. Gunakan PDF, DOC, atau DOCX');
-        return;
-      }
-      
-      console.log('✅ File valid, setting uploadedFile...');
-      const fileName = file.name.replace(/\.[^/.]+$/, "");
-      
-      // Set semua state sekaligus
-      setUploadedFile(file);
-      setCvTitle(fileName);
-      
-      if (onNewUpload) {
-        onNewUpload();
-      }
-      
-      console.log('✅ File uploaded successfully!');
-      console.log('📝 Set cvTitle to:', fileName);
-    } else {
-      console.log('❌ No file selected');
-    }
+    validateAndSetFile(e.target.files[0]);
+    e.target.value = null; 
   };
 
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    else if (e.type === "dragleave") setDragActive(false);
   };
 
   const handleDrop = (e) => {
@@ -90,109 +40,87 @@ function CVUploadSection({ onAnalysisComplete, isLoading, setIsLoading, onNewUpl
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      console.log('📄 Dropped file:', file);
-      
-      // ... rest of validation
-    } else {
-      console.log('❌ No files in drop event');
+      validateAndSetFile(e.dataTransfer.files[0]);
     }
   };
 
   const handleAnalyze = async () => {
-    if (!uploadedFile) {
-      alert('Please select a CV file first');
-      return;
-    }
-
-    if (!selectedJob) {
-      alert('Please select a job position first');
-      return;
-    }
-
+    if (!uploadedFile || !jobTitle.trim() || !jobDescription.trim()) return;
+    
+    setError('');
     setIsLoading(true);
+
     try {
-      // Buat FormData untuk upload file
-      const formData = new FormData();
-      formData.append('cv_file', uploadedFile);
-      formData.append('cv_title', cvTitle);
-      formData.append('job_type', selectedJob);
-
-      console.log('📤 Uploading CV to backend...', {
-        file: uploadedFile.name,
-        jobType: selectedJob,
-        size: uploadedFile.size,
-        type: uploadedFile.type
-      });
-
-      // ✅ DEBUG: Check FormData contents
-      for (let [key, value] of formData.entries()) {
-        console.log(`FormData: ${key} =`, value);
-      }
-
-      // Panggil API yang sebenarnya
-      const result = await AstraAPI.analyzeCV(selectedJob, formData);
-      
-      const transformedData = transformAstraAnalysis(result);
-      onAnalysisComplete(transformedData);
-      console.log('✅ Analysis complete:', result);
+      const result = await jobSeekerApi.analyzeCV(
+        uploadedFile, 
+        jobDescription, 
+        uploadedFile.name, 
+        jobTitle
+      );
       onAnalysisComplete(result);
-      
     } catch (error) {
-      console.error('❌ Analysis error:', error);
-      
-      // ✅ TAMPILKAN ERROR DETAIL
-      if (error.message.includes('Network error') || error.message.includes('Failed to fetch')) {
-        alert('Tidak dapat terhubung ke server. Pastikan backend berjalan di http://localhost:5000');
-      } else {
-        alert(error.message || 'Failed to analyze CV');
-      }
+      console.error('Analysis error:', error);
+      setError(error.error || error.message || 'Failed to analyze CV.');
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-8 border border-[#DCEDFF]">
-      <h2 className="text-2xl font-bold text-[#343F3E] mb-2">Upload Your CV</h2>
-      <p className="text-[#505A5B] mb-6">Get instant analysis and improvement suggestions</p>
-      
-      {/* Job Selection */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-[#505A5B] mb-2">
-          Select Job Position
-        </label>
-        <select
-          value={selectedJob}
-          onChange={(e) => setSelectedJob(e.target.value)}
-          className="w-full px-4 py-3 border border-[#94B0DA] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#94B0DA] bg-white"
-        >
-          <option value="">Choose a job position...</option>
-          {jobOptions.map((job) => (
-            <option key={job.id} value={job.id}>
-              {job.name}
-            </option>
-          ))}
-        </select>
-        {selectedJob && (
-          <p className="text-sm text-[#8F91A2] mt-2">
-            {jobOptions.find(job => job.id === selectedJob)?.description}
-          </p>
-        )}
+    <div className="bg-white rounded-3xl shadow-sm p-8 border border-gray-100 mb-8">
+      {/* Header Section */}
+      <div className="mb-8 border-b border-gray-100 pb-4">
+        <h2 className="text-2xl font-bold text-slate-800">Upload & Analyze</h2>
+        <p className="text-slate-500 mt-1 text-sm">Fill in the job details and upload your CV to get started.</p>
       </div>
 
-      {/* File Upload - Drag & Drop */}
+      {/* Inputs Section - Stacked Vertically */}
+      <div className="space-y-6 mb-8">
+        
+        {/* 1. Job Title */}
+        <div>
+          <label className="block text-sm font-bold text-slate-700 mb-2">
+            Job Position / Title <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={jobTitle}
+            onChange={(e) => setJobTitle(e.target.value)}
+            placeholder="e.g. Senior Data Engineer"
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#94B0DA] focus:bg-white transition-all text-slate-700 font-medium placeholder-slate-400"
+          />
+        </div>
+
+        {/* 2. Job Description - Textarea Large */}
+        <div>
+          <label className="block text-sm font-bold text-slate-700 mb-2">
+            Job Description <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            placeholder="Paste the full job requirements and responsibilities here..."
+            rows="6"
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#94B0DA] focus:bg-white transition-all text-slate-700 placeholder-slate-400 resize-y min-h-[120px]"
+          />
+          <p className="text-xs text-slate-400 mt-2 text-right">
+            AI will analyze your CV based on this description.
+          </p>
+        </div>
+
+      </div>
+      
+      {/* Upload Area (The Dotted Box) */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-[#505A5B] mb-2">
-          Upload CV
+        <label className="block text-sm font-bold text-slate-700 mb-2">
+          Upload CV (PDF/DOCX) <span className="text-red-500">*</span>
         </label>
         <div
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+          className={`relative border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-200 ease-in-out ${
             dragActive 
-              ? 'border-[#94B0DA] bg-[#DCEDFF]' 
-              : 'border-[#94B0DA] bg-white'
+              ? 'border-[#94B0DA] bg-blue-50' 
+              : 'border-gray-300 hover:border-[#94B0DA] hover:bg-gray-50'
           }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -203,57 +131,63 @@ function CVUploadSection({ onAnalysisComplete, isLoading, setIsLoading, onNewUpl
             type="file"
             onChange={handleFileChange}
             accept=".pdf,.doc,.docx"
-            className="hidden"
-            id="cv-upload"
-            style={{ display: 'none', position: 'absolute', zIndex: -1 }}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           />
-          <label htmlFor="cv-upload" className="cursor-pointer block">
-            <div className="text-4xl mb-4">📄</div>
-            <p className="text-lg font-medium text-[#343F3E] mb-2">
-              {/* ✅ TAMPILKAN FILE NAME */}
-              {uploadedFile ? (
-                <span className="text-green-600">✓ {uploadedFile.name}</span>
-              ) : (
-                'Drag & drop your CV here'
-              )}
-            </p>
-            <p className="text-[#505A5B] mb-4">
-              or click to browse files
-            </p>
-            <div className="px-6 py-2 bg-[#94B0DA] text-white rounded-lg inline-block hover:bg-[#7A9BC8] transition-colors">
-              {uploadedFile ? 'Change File' : 'Choose File'}
+          
+          <div className="flex flex-col items-center justify-center pointer-events-none">
+            <div className="w-14 h-14 bg-blue-100 text-[#94B0DA] rounded-full flex items-center justify-center mb-3 text-2xl shadow-sm">
+              ☁️
             </div>
-          </label>
-        </div>
-        <div className="text-center mt-3">
-          <p className="text-sm text-[#8F91A2]">
-            Supported formats: PDF, DOC, DOCX (Max 10MB)
-          </p>
-          <p className="text-sm text-[#8F91A2]">
-            Supports Bahasa Indonesia & English CVs
-          </p>
+            <h3 className="text-md font-bold text-slate-700">Drag & drop your CV here</h3>
+            <p className="text-slate-400 mt-1 mb-4 text-sm">Max size: 10MB</p>
+            
+            <button className="px-5 py-2 bg-white border border-gray-200 text-slate-600 font-semibold rounded-lg shadow-sm">
+              {uploadedFile ? 'Change File' : 'Browse Files'}
+            </button>
+
+            {uploadedFile && (
+              <div className="mt-4 flex items-center gap-3 text-slate-700 bg-white px-4 py-3 rounded-xl shadow-sm border border-green-100 ring-1 ring-green-100">
+                <span className="text-green-500 text-xl">📄</span>
+                <div className="text-left">
+                  <p className="font-bold text-sm text-slate-800 truncate max-w-[200px]">{uploadedFile.name}</p>
+                  <p className="text-xs text-slate-400">Ready to analyze</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Analyze Button */}
-      <button
-        onClick={handleAnalyze}
-        disabled={isLoading || !uploadedFile || !selectedJob}
-        className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition-colors ${
-          isLoading || !uploadedFile || !selectedJob
-            ? 'bg-[#8F91A2] cursor-not-allowed'
-            : 'bg-[#94B0DA] hover:bg-[#7A9BC8]'
-        }`}
-      >
-        {isLoading ? (
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            Analyzing CV...
-          </div>
-        ) : (
-          `Analyze CV ${uploadedFile ? `(${uploadedFile.name})` : ''}`
-        )}
-      </button>
+      {error && (
+        <div className="mt-4 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm flex items-center gap-3">
+          <span className="text-lg">⚠️</span> {error}
+        </div>
+      )}
+
+      {/* Action Button */}
+      <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+        <button
+          onClick={handleAnalyze}
+          disabled={isLoading || !uploadedFile || !jobTitle.trim() || !jobDescription.trim()}
+          className={`px-10 py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform active:scale-95 flex items-center gap-2 ${
+            isLoading || !uploadedFile || !jobTitle.trim() || !jobDescription.trim()
+              ? 'bg-gray-300 cursor-not-allowed shadow-none'
+              : 'bg-[#94B0DA] hover:bg-[#7FA1D1] hover:shadow-blue-200'
+          }`}
+        >
+          {isLoading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <span>✨</span>
+              <span>Start Analysis</span>
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
