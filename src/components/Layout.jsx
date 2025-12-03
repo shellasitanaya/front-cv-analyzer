@@ -48,7 +48,7 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
        items = [
          { label: "Dashboard", path: "/user-cv-analysis", hash: "" }, // HR juga butuh akses dashboard user
          { label: "Candidate Search", path: "/talent-pool" },
-          { label: "Job Posting", path: "/create-job" },
+          { label: "Job Posting", path: "/hr/create-job" },
          { label: "Screening", path: "/hr-screening" },
        ];
     } 
@@ -64,7 +64,7 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
         ...(userRole === 'hr' || userRole === 'admin' ? [
             { label: "--- HR Tools ---", path: "#", disabled: true },
             { label: "Candidate Search", path: "/talent-pool" },
-            { label: "Job Posting", path: "/create-job" },
+            { label: "Job Posting", path: "/hr/create-job" },
             { label: "Screening", path: "/hr-screening" }
         ] : [])
       ];
@@ -77,7 +77,7 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
         ...(userRole === 'hr' || userRole === 'admin' ? [
             { label: "--- HR Tools ---", path: "#", disabled: true },
             { label: "Candidate Search", path: "/talent-pool" },
-            { label: "Job Posting", path: "/create-job" },
+            { label: "Job Posting", path: "/hr/create-job" },
             { label: "Screening", path: "/hr-screening" }
         ] : [])
       ];
