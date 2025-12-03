@@ -19,6 +19,8 @@ import HRTest from "./pages/hr/HRTest";
 import ScreeningPage from "./features/hr/ScreeningPage";
 import RankingPage from "./features/hr/RankingPage";
 import JobPosting from "./pages/hr/JobPosting";
+
+import CandidateProfile from "./features/hr/CandidateProfile";
 import CompareCandidatesPage from "./features/hr/pages/CompareCandidatesPage";
 
 // Admin Pages (future expansion)
@@ -100,6 +102,17 @@ export default function App() {
             <ProtectedRoute allowedRoles={["hr", "admin"]}>
               <JobPosting />
             </ProtectedRoute>
+          }
+        />
+        {/* ---------- CANDIDATE PROFILE ---------- */}
+        <Route
+          path="/candidate/:id"
+          element={
+            <CandidateProfile />
+            // Atau jika ingin proteksi sederhana:
+            // <ProtectedRoute allowedRoles={["user", "hr", "admin"]}>
+            //   <CandidateProfile />
+            // </ProtectedRoute>
           }
         />
         <Route
