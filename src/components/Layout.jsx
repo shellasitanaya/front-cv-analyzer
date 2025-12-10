@@ -69,8 +69,19 @@ export default function Layout({ children, activeFeature = 'analyze', onMyResume
   // --- LOGIKA MENU DINAMIS ---
   const getNavItems = () => {
     let items = [];
-
-    // JIKA USER (atau HR yang sedang di halaman User Dashboard)
+    // MENU KHUSUS HR / ADMIN (Selalu muncul di atas atau bawah, tergantung preferensi)
+    // Disini saya taruh logic agar HR punya menu sendiri, tapi User punya menu dinamis
+    
+    if (userRole === 'hr' || userRole === 'admin') {
+       // Menu HR tetap konsisten
+       items = [
+         { label: "Dashboard", path: "/user-cv-analysis", hash: "" }, // HR juga butuh akses dashboard user
+         { label: "Candidate Search", path: "/talent-pool" },
+          { label: "Job Posting", path: "/hr/create-job" },
+         { label: "Screening", path: "/hr-screening" },
+       ];
+    } 
+        // JIKA USER (atau HR yang sedang di halaman User Dashboard)
     if (activeFeature === 'analyze') {
       // --- MENU ANALYSIS ---
       items = [
@@ -82,12 +93,14 @@ export default function Layout({ children, activeFeature = 'analyze', onMyResume
       // --- MENU GENERATOR ---
       items = [
         { label: "Templates", path: "/user-cv-analysis", hash: "" },
-        { 
-          label: "My Resumes", 
-          path: "/user-cv-analysis", 
-          hash: "recent-cv-projects",
-          isMyResumes: true // Flag khusus untuk My Resumes
-        },
+        { label: "My Resumes", path: "/user-cv-analysis", hash: "saved-resumes" }, // Placeholder jika nanti ada fitur save
+        // Tambahkan menu HR di bawah jika dia HR
+        ...(userRole === 'hr' || userRole === 'admin' ? [
+            { label: "--- HR Tools ---", path: "#", disabled: true },
+            { label: "Candidate Search", path: "/talent-pool" },
+            { label: "Job Posting", path: "/hr/create-job" },
+            { label: "Screening", path: "/hr-screening" }
+        ] : [])
       ];
     }
 

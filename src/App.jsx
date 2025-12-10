@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 // Auth Pages
 import LoginPage from "./pages/Login";
 import AdminLoginPage from "./pages/admin/AdminLogin";
+import RegisterPage from "./features/Auth/pages/RegistrationPage";
 
 // User Pages
 import FillData from "./pages/js/FillData";
@@ -18,6 +19,7 @@ import HRTest from "./pages/hr/HRTest";
 import ScreeningPage from "./features/hr/ScreeningPage";
 import RankingPage from "./features/hr/RankingPage";
 import JobPosting from "./pages/hr/JobPosting";
+import CompareCandidatesPage from "./features/hr/pages/CompareCandidatesPage";
 
 // Admin Pages (future expansion)
 // import AdminDashboardPage from "./pages/admin/AdminDashboard";
@@ -36,6 +38,7 @@ export default function App() {
       <Routes>
         {/* ---------- AUTHENTICATION ---------- */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
@@ -68,7 +71,7 @@ export default function App() {
 
         {/* ---------- HR ROUTES ---------- */}
         <Route
-          path="/hr-test"
+          path="/talent-pool"
           element={
             <ProtectedRoute allowedRoles={["hr", "admin"]}>
               <HRTest />
@@ -96,6 +99,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["hr", "admin"]}>
               <JobPosting />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/compare-candidates"
+          element={
+            <ProtectedRoute allowedRoles={["hr", "admin"]}>
+              <CompareCandidatesPage />
             </ProtectedRoute>
           }
         />

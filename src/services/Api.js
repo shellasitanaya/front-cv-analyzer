@@ -1,7 +1,7 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-// Endpoint paths - PERBAIKI INI
-export const Login = "/api/auth/login";  // ✅ PERBAIKI PATH
+export const Login = "/api/auth/login";  
+export const Register = "/api/auth/register";
 export const Logout = "/api/auth/logout";
 
 // ======== Helper ========
@@ -22,21 +22,10 @@ async function request(endpoint, { method = "GET", body, headers = {} } = {}) {
     ...(body ? { body: JSON.stringify(body) } : {}),
   };
 
-  const res = await fetch(`${API_BASE_URL}${endpoint}`, config);
-  const data = await res.json();
-  console.log("API Response:", data);
   console.log(`🔄 API Call: ${method} ${API_BASE_URL}${endpoint}`);
 
   try {
     const res = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    
-    // ✅ TAMBAHKAN INI - Handle 401 Unauthorized
-    if (res.status === 401) {
-      console.warn('⚠️ Token expired or invalid. Logging out...');
-      localStorage.removeItem("token");
-      window.location.href = "/login";
-      throw new Error('Session expired. Please login again.');
-    }
     
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
@@ -45,6 +34,7 @@ async function request(endpoint, { method = "GET", body, headers = {} } = {}) {
 
     const data = await res.json();
     return data;
+    
   } catch (error) {
     console.error("❌ API Error:", error);
     if (error.name === 'TypeError') {
@@ -58,7 +48,12 @@ async function request(endpoint, { method = "GET", body, headers = {} } = {}) {
 export const AuthAPI = {
   login: (email, password, role) =>
     request(Login, { method: "POST", body: { email, password, role } }),
+
+  register: (name, email, password, role) =>
+    request(Register, { method: "POST", body: { name, email, password, role } }),
+
   logout: () => localStorage.removeItem("token"),
+  
 };
 
 // ======== Job Seeker API ========

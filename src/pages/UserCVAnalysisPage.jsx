@@ -231,7 +231,7 @@ function UserCVAnalysisPage() {
               {analysisLoading && (
                 <div className="bg-white rounded-[32px] p-12 text-center border border-gray-100 shadow-sm animate-pulse">
                   <div className="w-16 h-16 border-4 border-[#94B0DA] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <h3 className="text-xl font-bold text-[#343F3E]">AI is analyzing...</h3>
+                  <h3 className="text-xl font-bold text-[#343F3E]">AI is analyzing your CV...</h3>
                 </div>
               )}
 
