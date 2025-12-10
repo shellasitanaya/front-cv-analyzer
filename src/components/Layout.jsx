@@ -2,8 +2,8 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
-// Terima prop 'activeFeature' ('analyze' atau 'generate')
-export default function Layout({ children, activeFeature = 'analyze' }) {
+// Terima prop 'activeFeature' ('analyze' atau 'generate') dan 'onMyResumesClick'
+export default function Layout({ children, activeFeature = 'analyze', onMyResumesClick }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,14 +20,19 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/");
+    navigate("/login");
   };
 
   const handleNavigation = (path, hash = "") => {
     if (location.pathname === path) {
       if (hash) {
+        // Scroll ke element dengan ID tertentu
         const element = document.getElementById(hash);
-        if (element) element.scrollIntoView({ behavior: "smooth" });
+        if (element) {
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 100);
+        }
       } else {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -36,22 +41,35 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
     }
   };
 
+  // --- HANDLER UNTUK MY RESUMES ---
+  const handleMyResumesClick = () => {
+    if (onMyResumesClick) {
+      // Gunakan callback dari parent jika ada (biasanya untuk switch tab di UserCVAnalysisPage)
+      onMyResumesClick();
+    } else {
+      // Default behavior: Navigasi ke generator dan scroll ke recent CV projects
+      if (location.pathname === "/user-cv-analysis") {
+        setTimeout(() => {
+          const element = document.getElementById("recent-cv-projects");
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 100);
+      } else {
+        navigate("/user-cv-analysis", { 
+          state: { 
+            scrollTo: "recent-cv-projects",
+            activeTab: "generate"
+          } 
+        });
+      }
+    }
+  };
+
   // --- LOGIKA MENU DINAMIS ---
   const getNavItems = () => {
     let items = [];
 
-    // MENU KHUSUS HR / ADMIN (Selalu muncul di atas atau bawah, tergantung preferensi)
-    // Disini saya taruh logic agar HR punya menu sendiri, tapi User punya menu dinamis
-    
-    if (userRole === 'hr' || userRole === 'admin') {
-       // Menu HR tetap konsisten
-       items = [
-         { label: "Dashboard", path: "/user-cv-analysis", hash: "" }, // HR juga butuh akses dashboard user
-         { label: "Candidate Search", path: "/hr-test" },
-         { label: "Screening", path: "/hr-screening" },
-       ];
-    } 
-    
     // JIKA USER (atau HR yang sedang di halaman User Dashboard)
     if (activeFeature === 'analyze') {
       // --- MENU ANALYSIS ---
@@ -59,26 +77,30 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
         { label: "Dashboard", path: "/user-cv-analysis", hash: "" },
         { label: "Analyze CV", path: "/user-cv-analysis", hash: "upload-section" },
         { label: "History", path: "/user-cv-analysis", hash: "history-section" },
-        // Tambahkan menu HR di bawah jika dia HR
-        ...(userRole === 'hr' || userRole === 'admin' ? [
-            { label: "--- HR Tools ---", path: "#", disabled: true },
-            { label: "Candidate Search", path: "/hr-test" },
-            { label: "Screening", path: "/hr-screening" }
-        ] : [])
       ];
     } else if (activeFeature === 'generate') {
       // --- MENU GENERATOR ---
       items = [
         { label: "Templates", path: "/user-cv-analysis", hash: "" },
-        { label: "My Resumes", path: "/user-cv-analysis", hash: "saved-resumes" }, // Placeholder jika nanti ada fitur save
-        // Tambahkan menu HR di bawah jika dia HR
-        ...(userRole === 'hr' || userRole === 'admin' ? [
-            { label: "--- HR Tools ---", path: "#", disabled: true },
-            { label: "Candidate Search", path: "/hr-test" },
-            { label: "Screening", path: "/hr-screening" }
-        ] : [])
+        { 
+          label: "My Resumes", 
+          path: "/user-cv-analysis", 
+          hash: "recent-cv-projects",
+          isMyResumes: true // Flag khusus untuk My Resumes
+        },
       ];
     }
+
+    // MENU KHUSUS HR / ADMIN (Ditambahkan di bawah menu user)
+    if (userRole === 'hr' || userRole === 'admin') {
+       items = [
+         ...items,
+         { label: "--- HR Tools ---", path: "#", disabled: true },
+         { label: "Candidate Search", path: "/talent-pool" },
+         { label: "Job Posting", path: "/hr/create-job" },
+         { label: "Screening", path: "/hr-screening" },
+       ];
+    } 
 
     return items;
   };
@@ -95,21 +117,28 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
 
         <nav className="flex-1 px-4 space-y-2 mt-4">
           {navItems.map((item, idx) => {
+             // Render divider/label jika disabled
              if (item.disabled) {
                  return (
-                    <div key={idx} className="px-5 py-2 text-xs font-bold text-gray-300 uppercase mt-2">
+                    <div key={idx} className="px-5 py-2 text-xs font-bold text-gray-300 uppercase mt-4 mb-1">
                         {item.label}
                     </div>
                  )
              }
 
-            // Highlight Logic: Cek path DAN hash (khususnya untuk Analysis vs History)
+            // Perbaikan Syntax Error di sini: menggunakan backticks ` `
             const isActive = location.pathname === item.path && (!item.hash || location.hash === `#${item.hash}`);
             
             return (
               <button
                 key={idx}
-                onClick={() => handleNavigation(item.path, item.hash)}
+                onClick={() => {
+                  if (item.isMyResumes) {
+                    handleMyResumesClick();
+                  } else {
+                    handleNavigation(item.path, item.hash);
+                  }
+                }}
                 className={`w-full flex items-center px-5 py-3 rounded-xl transition-all duration-200 font-medium text-sm ${
                   isActive 
                     ? "bg-[#94B0DA] text-white shadow-md shadow-blue-100" 
@@ -124,6 +153,9 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
 
         <div className="p-6 border-t border-gray-50">
           <button onClick={handleLogout} className="flex items-center gap-3 text-[#8F91A2] hover:text-red-500 transition-colors w-full px-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
             <span className="font-medium text-sm">Logout</span>
           </button>
         </div>
@@ -151,7 +183,7 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto pb-20">
+        <div className="max-w-7xl mx-auto pb-20">
           {children}
         </div>
       </main>
