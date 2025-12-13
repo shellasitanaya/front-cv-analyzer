@@ -152,7 +152,7 @@ function UserCVAnalysisPage() {
               )}
 
               <div id="history-section" className="scroll-mt-24">
-                <h3 className="text-lg font-bold text-[#343F3E] mb-4 ml-1">Recent Analysis History</h3>
+                {/* <h3 className="text-lg font-bold text-[#343F3E] mb-4 ml-1">Recent Analysis History</h3> */}
                 <MyCVsSection key={refreshTrigger} />
               </div>
             </div>
