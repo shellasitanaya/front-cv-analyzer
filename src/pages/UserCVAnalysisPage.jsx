@@ -243,7 +243,6 @@ function UserCVAnalysisPage() {
                 )}
 
                 <div id="history-section">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Analysis History</h3>
                   <MyCVsSection key={refreshTrigger} />
                 </div>
               </div>
