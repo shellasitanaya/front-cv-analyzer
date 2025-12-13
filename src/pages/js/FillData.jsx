@@ -564,6 +564,9 @@ function FillData({ template, onComplete, onBack }) {
             } else if (gpaVal > maxVal) {
                 newErrors[`edu_${index}_gpa`] = `Maximum GPA is ${maxVal}`; 
                 isEduValid = false;
+            } else if (gpaVal < 0.1) {
+                newErrors[`edu_${index}_gpa`] = `Minimum GPA is 0.01`; 
+                isEduValid = false;
             }
         }
       });
@@ -757,13 +760,22 @@ function FillData({ template, onComplete, onBack }) {
   // --- RENDER LAYOUT DENGAN LIVE PREVIEW ---
   return (
     <div className="w-full h-full flex flex-col lg:flex-row gap-6 overflow-hidden">
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
       {/* LEFT SIDE: FORM */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col h-full overflow-hidden">
           
           {/* HEADER: Progress Bar (Sticky) */}
-          <div className="pt-8 px-8 pb-6 bg-white border-b border-gray-100 flex-shrink-0 z-10 sticky top-0">
-              <div className="flex justify-between items-center relative px-4">
+          <div className="pt-8 px-8 pb-6 bg-white border-b border-gray-100 flex-shrink-0 z-10 sticky top-5">
+              <div className="flex justify-between items-start relative px-4">
                   <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1.5 bg-gray-100 -z-0 rounded-full"></div>
                   <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1.5 bg-gradient-to-r from-blue-500 to-purple-500 -z-0 rounded-full transition-all duration-500 ease-in-out" style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}></div>
                   {STEPS.map((step) => {
@@ -786,7 +798,7 @@ function FillData({ template, onComplete, onBack }) {
           </div>
 
           {/* CONTENT AREA (Scrollable) */}
-          <div className="flex-1 overflow-y-auto p-8 custom-scrollbar min-h-0">
+          <div className={`flex-1 overflow-y-auto p-8 min-h-0 ${currentStep === 6 ? 'hide-scrollbar' : 'custom-scrollbar'}`}>
             {currentStep <= 5 ? (
               <form onSubmit={(e) => e.preventDefault()}>
                 
@@ -1339,82 +1351,77 @@ function FillData({ template, onComplete, onBack }) {
               </form>
             ) : (
               /* STEP 6: ACTIONS (Download PDF, Save CV, New CV) */
-              <div className="space-y-6 animate-fade-in">
-                <div className="text-center mb-8">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-r from-green-100 to-green-200 flex items-center justify-center mx-auto mb-6">
-                    <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              <div className="space-y-4 animate-fade-in">
+  
+              {/* Compact Header Section */}
+              <div className="text-center mb-6">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-r from-green-100 to-green-200 flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">CV Ready to Download!</h3>
+                <p className="text-gray-500 text-sm">Your professional CV has been created. Choose what you want to do next.</p>
+              </div>
+
+              {/* Grid Container (Action Cards) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 max-w-4xl mx-auto">
+  
+              {/* Compact Download PDF Card */}
+              <div className="group border border-blue-100 rounded-xl p-4 bg-white hover:border-blue-300 hover:shadow-md transition-all duration-200">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-800 mb-3">CV Ready to Download!</h3>
-                  <p className="text-gray-600 text-lg">Your professional CV has been created. Choose what you want to do next.</p>
+                  <h4 className="text-sm font-bold text-gray-700 mb-3">Download PDF</h4>
+                  <button
+                    onClick={handleDownloadPDF}
+                    disabled={isGeneratingPDF}
+                    className="w-full py-2 px-4 bg-blue-600 text-white text-xs rounded-lg font-bold hover:bg-blue-700 transition shadow-sm disabled:opacity-50"
+                  >
+                    {isGeneratingPDF ? "Generating..." : pdfUrl ? "Download" : "Generate"}
+                  </button>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  {/* Download PDF Card */}
-                  <div className="group border-2 border-blue-200 rounded-2xl p-8 bg-gradient-to-br from-blue-50 to-white hover:border-blue-400 hover:shadow-xl transition-all duration-300">
-                    <div className="text-center">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                      </div>
-                      <h4 className="text-xl font-bold text-gray-800 mb-3">Download PDF</h4>
-                      <button
-                        onClick={handleDownloadPDF}
-                        disabled={isGeneratingPDF}
-                        className="w-full min-h-[50px] h-auto py-3 px-4 flex items-center justify-center whitespace-normal bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isGeneratingPDF ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Generating...
-                          </div>
-                        ) : pdfUrl ? (
-                          "Download Now"
-                        ) : (
-                          "Generate CV"
-                        )}
-                      </button>
-                    </div>
+              {/* Compact Save CV Card */}
+              <div className="group border border-green-100 rounded-xl p-4 bg-white hover:border-green-300 hover:shadow-md transition-all duration-200">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                    </svg>
                   </div>
-
-                  {/* Save CV Card */}
-                  <div className="group border-2 border-green-200 rounded-2xl p-8 bg-gradient-to-br from-green-50 to-white hover:border-green-400 hover:shadow-xl transition-all duration-300">
-                    <div className="text-center">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                        </svg>
-                      </div>
-                      <h4 className="text-xl font-bold text-gray-800 mb-3">Save to My CVs</h4>
-                      <button
-                        onClick={handleSaveCV}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition"
-                      >
-                        Save CV
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* New CV Card */}
-                  <div className="group border-2 border-purple-200 rounded-2xl p-8 bg-gradient-to-br from-purple-50 to-white hover:border-purple-400 hover:shadow-xl transition-all duration-300">
-                    <div className="text-center">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                      </div>
-                      <h4 className="text-xl font-bold text-gray-800 mb-3">Create New CV</h4>
-                      <button
-                        onClick={handleNewCV}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transition"
-                      >
-                        New CV
-                      </button>
-                    </div>
-                  </div>
+                  <h4 className="text-sm font-bold text-gray-700 mb-3">Save to My CVs</h4>
+                  <button
+                    onClick={handleSaveCV}
+                    className="w-full py-2 px-4 bg-green-600 text-white text-xs rounded-lg font-bold hover:bg-green-700 transition shadow-sm"
+                  >
+                    Save CV
+                  </button>
                 </div>
+              </div>
+
+              {/* Compact New CV Card */}
+              <div className="group border border-purple-100 rounded-xl p-4 bg-white hover:border-purple-300 hover:shadow-md transition-all duration-200">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                  </div>
+                  <h4 className="text-sm font-bold text-gray-700 mb-3">Create New CV</h4>
+                  <button
+                    onClick={handleNewCV}
+                    className="w-full py-2 px-4 bg-purple-600 text-white text-xs rounded-lg font-bold hover:bg-purple-700 transition shadow-sm"
+                  >
+                    New CV
+                  </button>
+                </div>
+              </div>
+            </div>
 
                 {/* Error Message */}
                 {pdfError && (
@@ -1434,7 +1441,7 @@ function FillData({ template, onComplete, onBack }) {
                 )}
 
                 {/* CV Preview Summary */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-100 rounded-2xl p-6">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-100 rounded-2xl p-6 ">
                   <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -1465,19 +1472,6 @@ function FillData({ template, onComplete, onBack }) {
                     </span>
                   </div>
                 </div>
-
-                {/* Back to Edit Button */}
-                <div className="text-center pt-6">
-                  <button
-                    onClick={() => setCurrentStep(5)}
-                    className="px-6 py-2.5 text-gray-600 hover:text-gray-800 font-medium flex items-center gap-2 mx-auto hover:bg-gray-100 rounded-xl transition"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
-                    </svg>
-                    Back to Skills Section
-                  </button>
-                </div>
               </div>
             )}
           </div>
@@ -1497,7 +1491,7 @@ function FillData({ template, onComplete, onBack }) {
               ) : (
                   <button 
                     onClick={onBack} 
-                    className="px-8 py-3 rounded-xl border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold transition flex items-center gap-2 shadow-sm hover:shadow"
+                    className="px-8 py-2.5 rounded-xl border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold transition flex items-center gap-2 shadow-sm hover:shadow"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -1509,7 +1503,7 @@ function FillData({ template, onComplete, onBack }) {
               {currentStep < STEPS.length - 1 ? (
                   <button 
                     onClick={handleNext} 
-                    className="px-10 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 font-semibold shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center gap-2"
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 font-semibold shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center gap-2"
                   >
                     Continue to {STEPS[currentStep]?.label || 'Next'}
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
