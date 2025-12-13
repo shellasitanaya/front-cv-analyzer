@@ -116,7 +116,7 @@ function PreviewCV({ formData, template, onBack, onRestart, onSave }) {
   };
 
   // --- GENERATE PDF ---
-  const generatePDF = useCallback(async (dataToGenerate = null, useAI = true) => {
+  const generatePDF = useCallback(async (dataToGenerate = null, useAI = false) => {
     const data = dataToGenerate || formData;
 
     if (!data || !data.name || data.name.trim() === "") {
@@ -220,7 +220,7 @@ function PreviewCV({ formData, template, onBack, onRestart, onSave }) {
   useEffect(() => {
     if (formData && template && !pdfUrl && !loading && !isEditing) {
       console.log("🔄 Initial PDF Generation Triggered");
-      generatePDF();
+      generatePDF(formData, false);
     }
   }, [formData, template, generatePDF, pdfUrl, loading, isEditing]);
 
@@ -1030,16 +1030,6 @@ function PreviewCV({ formData, template, onBack, onRestart, onSave }) {
                   </svg>
                   New CV
                 </button>
-              </div>
-
-              {/* Formatting Info */}
-              <div className="mt-4 text-center">
-                <div className="inline-flex items-center gap-2 text-xs text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
-                  <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span>✓ Summary & Experience formatted with bullet points (each sentence on new line)</span>
-                </div>
               </div>
             </div>
           </div>

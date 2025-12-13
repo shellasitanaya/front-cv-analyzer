@@ -213,8 +213,6 @@ function UserCVAnalysisPage() {
             <div className="h-full overflow-y-auto custom-scrollbar p-6">
               <div className="max-w-7xl mx-auto space-y-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-                  <p className="text-gray-600">Optimize your resume with AI insights</p>
                 </div>
 
                 <div id="upload-section" className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -268,8 +266,6 @@ function UserCVAnalysisPage() {
                   border-b border-gray-200
                 "
               >
-                <h1 className="text-3xl font-bold text-gray-900 mb-1">CV Builder</h1>
-                <p className="text-gray-600">Create professional resumes in minutes</p>
 
                 {/* Progress Indicator untuk Fill Data & Preview */}
               </div>
