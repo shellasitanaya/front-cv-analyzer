@@ -27,9 +27,9 @@ export default function LoginForm() {
   }, [navigate]);
 
   const redirectByRole = (userRole) => {
-    if (userRole === "user") navigate("/user-test");
-    else if (userRole === "hr") navigate("/hr-test");
-    else if (userRole === "admin") navigate("/user-test");
+    if (userRole === "user") navigate("/asd");
+    else if (userRole === "hr") navigate("/talent-pool");
+    else if (userRole === "admin") navigate("/user-cv-analysis");
   };
 
   const handleLogin = async () => {
