@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Briefcase, GraduationCap, Award, MapPin, 
   Star, Target, Calendar, Building, CheckCircle,
-  Mail, Phone, Users, Clock, ChevronRight
+  Mail, Phone, Users, Clock, ChevronRight, Info
 } from 'lucide-react';
 
 const SkillTag = ({ skill, isMatched = false }) => (
@@ -47,7 +47,7 @@ const getExperiencePeriod = (experience) => {
   return match ? match[1] : '';
 };
 
-function CandidateCard({ candidate, matchQuality, searchedRole = '', selectedSkills = [] }) {
+function CandidateCard({ candidate, matchQuality, searchedRole = '', selectedSkills = [], searchMode  }) {
   const navigate = useNavigate();
   
   // Extract data dari experience field
@@ -91,6 +91,15 @@ function CandidateCard({ candidate, matchQuality, searchedRole = '', selectedSki
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border border-gray-200">
+      {/* Match Note Banner */}
+      {/* {candidate.match_note && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Info size={14} className="text-blue-600" />
+            <span className="text-xs font-medium text-blue-800">{candidate.match_note}</span>
+          </div>
+        </div>
+      )} */}
       <div className="flex flex-col lg:flex-row gap-6">
         
         {/* Left Section - Main Info */}
@@ -260,33 +269,87 @@ function CandidateCard({ candidate, matchQuality, searchedRole = '', selectedSki
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <h4 className="text-xs font-semibold text-gray-600 mb-3">MATCH DETAILS</h4>
             <div className="space-y-3">
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs text-gray-600">Experience Match</span>
-                  <span className="text-xs font-bold text-blue-600">
-                    {matchScore >= 80 ? 'Excellent' : matchScore >= 60 ? 'Good' : 'Fair'}
-                  </span>
+              {/* Match Type sesuai mode */}
+              {searchMode === 'skills' ? (
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs text-gray-600">Skill Match</span>
+                    <span className="text-xs font-bold text-green-600">
+                      {matchScore >= 80 ? 'Excellent' : matchScore >= 60 ? 'Good' : 'Fair'}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-green-500 rounded-full transition-all duration-500"
+                      style={{ width: `${matchScore}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-500 rounded-full transition-all duration-500"
-                    style={{ width: `${matchScore}%` }}
-                  ></div>
+              ) : searchMode === 'name' ? (
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs text-gray-600">Name Match</span>
+                    <span className="text-xs font-bold text-purple-600">
+                      {matchScore >= 80 ? 'Excellent' : matchScore >= 60 ? 'Good' : 'Fair'}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-purple-500 rounded-full transition-all duration-500"
+                      style={{ width: `${matchScore}%` }}
+                    ></div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs text-gray-600">Experience Match</span>
+                    <span className="text-xs font-bold text-blue-600">
+                      {matchScore >= 80 ? 'Excellent' : matchScore >= 60 ? 'Good' : 'Fair'}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                      style={{ width: `${matchScore}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
               
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs text-gray-600">Years Experience</span>
-                  <span className="text-xs font-bold text-gray-800">{extractedYears} years</span>
+              {/* Years Experience - Tampilkan hanya untuk mode yang mengandung experience */}
+              {(searchMode === 'experience' || searchMode === 'experience_skills' || searchMode === 'auto') && (
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs text-gray-600">Years Experience</span>
+                    <span className="text-xs font-bold text-gray-800">{extractedYears} years</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-green-500 rounded-full"
+                      style={{ width: `${Math.min(extractedYears * 20, 100)}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-green-500 rounded-full"
-                    style={{ width: `${Math.min(extractedYears * 20, 100)}%` }}
-                  ></div>
+              )}
+              
+              {/* Skills Matched - Tampilkan hanya untuk mode yang mengandung skills */}
+              {(searchMode === 'skills' || searchMode === 'experience_skills') && selectedSkills.length > 0 && (
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs text-gray-600">Skills Matched</span>
+                    <span className="text-xs font-bold text-green-800">
+                      {matchedSkills.length}/{selectedSkills.length}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-green-500 rounded-full"
+                      style={{ width: `${(matchedSkills.length / selectedSkills.length) * 100}%` }}
+                    ></div>
+                  </div>
                 </div>
-              </div>
+              )}
               
               <div className="pt-3 border-t border-gray-200">
                 <div className="flex items-center justify-between">
