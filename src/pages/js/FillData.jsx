@@ -1,9 +1,10 @@
-// FillData.jsx - VERSI LENGKAP DENGAN VALIDASI PERSONAL INFO (STEP 1)
-import React, { useState, useCallback } from "react";
+// FillData.jsx - VERSI ASLI DENGAN FIX LOAD DATA
+import React, { useState, useCallback, useEffect } from "react"; // Tambah useEffect
 import axios from "axios";
 import LivePreview from "./LivePreview";
 
-function FillData({ template, onComplete, onBack }) {
+// 1. Tambah prop 'initialData'
+function FillData({ template, onComplete, onBack, initialData }) {
   // --- CONFIGURATION ---
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const currentYear = new Date().getFullYear();
@@ -53,6 +54,70 @@ function FillData({ template, onComplete, onBack }) {
       elaboration: "" 
     }],
   });
+
+  // --- 2. TAMBAHAN: USE EFFECT UNTUK LOAD DATA ---
+  // Ini logika agar data tidak kosong (hanya nama) saat diload
+  useEffect(() => {
+    if (initialData) {
+    console.log("🔄 Injecting Data to Form:", initialData);
+    
+    // 1. Cek apakah data terbungkus dalam properti '.data' (Smart Unwrapping)
+    // Ini menangani kasus jika struktur simpanan berbeda
+    let source = initialData;
+    if (initialData.data && typeof initialData.data === 'object' && !Array.isArray(initialData.data)) {
+        source = initialData.data;
+    }
+
+    // 2. Siapkan data array (agar tidak error jika kosong)
+    const rawExp = source.experience || source.work_experience || [];
+    const rawEdu = source.education || [];
+    const rawSkills = source.skills || [];
+
+    // 3. Masukkan ke State Form
+    setFormData(prev => ({
+      ...prev,
+      // Mapping String (dengan pengecekan variasi nama key)
+      name: source.name || source.extracted_name || initialData.name || "",
+      email: source.email || "",
+      phone: source.phone || "",
+      linkedin: source.linkedin || source.linkedin_url || "", 
+      portfolio: source.portfolio || source.portfolio_url || "",
+      summary: source.summary || "",
+
+      // Mapping Array: Experience
+      experience: Array.isArray(rawExp) && rawExp.length > 0 
+        ? rawExp.map(exp => ({
+            job_title: exp.job_title || "",
+            company_name: exp.company_name || exp.company || "", 
+            start_date: exp.start_date || "",
+            end_date: exp.end_date || "",
+            description: exp.description || ""
+          }))
+        : [{ job_title: "", company_name: "", start_date: "", end_date: "", description: "" }], // Default jika kosong
+
+      // Mapping Array: Education
+      education: Array.isArray(rawEdu) && rawEdu.length > 0
+        ? rawEdu.map(edu => ({
+            degree: edu.degree || "",
+            university: edu.university || "",
+            graduation_year: edu.graduation_year || "",
+            major: edu.major || "",
+            gpa: edu.gpa || "",
+            gpa_max: edu.gpa_max || "4.00"
+          }))
+        : [{ degree: "", university: "", graduation_year: "", major: "", gpa: "", gpa_max: "4.00" }],
+
+      // Mapping Array: Skills
+      skills: Array.isArray(rawSkills) && rawSkills.length > 0
+        ? rawSkills.map(skill => ({
+            name: skill.name || "",
+            year: skill.year || "",
+            elaboration: skill.elaboration || ""
+          }))
+        : [{ name: "", year: "", elaboration: "" }]
+    }));
+  }
+}, [initialData]);
 
   // --- HELPER DATE ---
   const parseDate = (dateString) => {
@@ -444,7 +509,7 @@ function FillData({ template, onComplete, onBack }) {
       }));
     }
   }, [formData.experience]);
-  
+   
   // --- VALIDATION LOGIC (UPDATED STEP 1) ---
   const validateStep = (step) => {
     const newErrors = {};
