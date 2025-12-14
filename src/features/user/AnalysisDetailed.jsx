@@ -1,19 +1,25 @@
 import React from 'react';
 
-// --- Komponen Alert (Tetap Sama) ---
-const CriticalGatekeeperAlert = ({ mandatoryChecks }) => {
+// --- Komponen Alert (Diperbarui) ---
+const CriticalGatekeeperAlert = ({ mandatoryChecks, currentScore }) => {
     const failedChecks = Object.keys(mandatoryChecks).filter(key => 
         mandatoryChecks[key].status === 'FAIL'
     );
 
     if (failedChecks.length === 0) return null;
 
+    // [FIX] Label Disederhanakan (Sesuai Request)
     const checkTitles = {
         gpa: "GPA Requirement",
-        major: "Major/Field of Study Relevance",
-        experience_years: "Relevant Experience Duration",
-        education_level: "Education Level/Degree Status"
+        major: "Field of Study",        // Sebelumnya Major/Field...
+        experience_years: "Experience Duration",
+        education_level: "Education Level" // Sebelumnya Education Level/Degree...
     };
+
+    // [FIX] Logika Tampilan Pesan Capped
+    // Hanya tampilkan pesan "Capped" jika skor tertahan di 25%.
+    // Jika skor murni rendah (misal 12%), pesan ini disembunyikan agar tidak bingung.
+    const showCappedMessage = currentScore >= 25;
 
     return (
         <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8 shadow-sm animate-fade-in-up">
@@ -23,14 +29,31 @@ const CriticalGatekeeperAlert = ({ mandatoryChecks }) => {
                 </svg>
                 CRITICAL ALERT: BASIC QUALIFICATIONS MISMATCH
             </h3>
-            <p className="text-red-600 mb-4 font-medium">
-                Your score has been capped at 25% because one or more mandatory requirements for this job were not met.
-            </p>
+            
+            {/* Hanya muncul jika skor >= 25 */}
+            {showCappedMessage && (
+                <p className="text-red-600 mb-4 font-medium">
+                    Your score has been capped at 25% because one or more mandatory requirements for this job were not met.
+                </p>
+            )}
+
+            {!showCappedMessage && (
+                <p className="text-red-600 mb-4 font-medium">
+                    Your qualifications do not meet the mandatory requirements for this position.
+                </p>
+            )}
+
             <ul className="space-y-3 pl-0 border-t border-red-100 pt-4">
                 {failedChecks.map(key => (
-                    <li key={key} className="flex items-start text-sm text-red-800 bg-red-100 p-3 rounded-lg border-l-4 border-red-500">
-                        <span className="font-bold w-40 flex-shrink-0 text-red-900">{checkTitles[key]}:</span> 
-                        <span className="ml-2 flex-grow">{mandatoryChecks[key].reason || "Reason not provided by AI."}</span>
+                    <li key={key} className="flex flex-col md:flex-row md:items-start text-sm text-red-800 bg-red-100 p-3 rounded-lg border-l-4 border-red-500">
+                        {/* Label Judul */}
+                        <span className="font-bold w-40 flex-shrink-0 text-red-900 mb-1 md:mb-0">
+                            {checkTitles[key] || key}:
+                        </span> 
+                        {/* Isi Pesan (Reason) */}
+                        <span className="flex-grow leading-relaxed">
+                            {mandatoryChecks[key].reason || "Requirement not met."}
+                        </span>
                     </li>
                 ))}
             </ul>
@@ -41,7 +64,6 @@ const CriticalGatekeeperAlert = ({ mandatoryChecks }) => {
 function AnalysisDetailed({ analysisData }) {
     if (!analysisData) return null;
 
-    // Destructure job_description juga (PENTING untuk History)
     const { match_score, gemini_result, job_info, job_description } = analysisData;
     const aiAnalysis = gemini_result?.ai_analysis || {};
     const skills = aiAnalysis.skills_analysis || [];
@@ -50,25 +72,18 @@ function AnalysisDetailed({ analysisData }) {
 
     const isGatekeeperFailed = Object.values(mandatoryChecks).some(check => check.status === 'FAIL');
 
-    // --- [FIX LOGIC] SMART TITLE EXTRACTION ---
-    // Logika: Cek title langsung -> Cek Gemini -> Cek Baris Pertama Teks Deskripsi (Database)
+    // --- SMART TITLE EXTRACTION ---
     let displayTitle = "Target Position"; 
-
     if (job_info?.title && job_info.title !== 'General Job' && job_info.title !== 'Custom Job Position') {
-        // 1. Jika data baru diupload (Biasanya ada di job_info)
         displayTitle = job_info.title;
     } else if (gemini_result?.job_info?.title) {
-        // 2. Jika ada di dalam object gemini
         displayTitle = gemini_result.job_info.title;
     } else if (job_description) {
-        // 3. [SOLUSI UTAMA] Jika data dari database (History), title ada di baris pertama text
         const firstLine = job_description.split('\n')[0].trim();
-        // Validasi: Pastikan baris pertama bukan paragraf panjang (kurang dari 80 karakter)
         if (firstLine && firstLine.length > 2 && firstLine.length < 80) {
             displayTitle = firstLine;
         }
     }
-    // ------------------------------------------
 
     // Helper Badge
     const getLevelBadge = (level) => {
@@ -81,7 +96,6 @@ function AnalysisDetailed({ analysisData }) {
 
     return (
         <div className="space-y-8">
-            
             {/* HEADER */}
             <div className="flex justify-between items-end pb-6 border-b border-gray-100">
                 <div>
@@ -96,10 +110,10 @@ function AnalysisDetailed({ analysisData }) {
                 </div>
             </div>
 
-            {/* Alert (Jika Ada) */}
-            <CriticalGatekeeperAlert mandatoryChecks={mandatoryChecks} />
+            {/* ALERT - Pass currentScore to handle logic */}
+            <CriticalGatekeeperAlert mandatoryChecks={mandatoryChecks} currentScore={match_score} />
 
-            {/* Skill Breakdown */}
+            {/* SKILL AUDIT */}
             <div>
                 <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                     <span>📋</span> Skill Quality Audit 
@@ -131,7 +145,7 @@ function AnalysisDetailed({ analysisData }) {
                 )}
             </div>
 
-            {/* Recommendation */}
+            {/* RECOMMENDATION */}
             {suggestion && (
                 <div className="bg-[#FFFBEB] border border-[#FCD34D] rounded-xl p-6">
                     <h3 className="font-bold text-[#92400E] mb-2 flex items-center gap-2"><span>💡</span> Strategic Recommendation</h3>
