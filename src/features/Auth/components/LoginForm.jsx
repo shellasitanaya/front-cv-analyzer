@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
-import { AuthAPI } from "../services/Api";
-import illustration from "../assets/images/login.jpg";
+import { AuthAPI } from "../../../services/Api.js";
+import illustration from "../../../assets/images/login.jpg";
 
-export default function LoginPage() {
+
+export default function LoginForm() {
   const [role, setRole] = useState("user"); // "user" or "hr"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,7 +27,7 @@ export default function LoginPage() {
   }, [navigate]);
 
   const redirectByRole = (userRole) => {
-    if (userRole === "user") navigate("/user-cv-analysis");
+    if (userRole === "user") navigate("/asd");
     else if (userRole === "hr") navigate("/talent-pool");
     else if (userRole === "admin") navigate("/user-cv-analysis");
   };
