@@ -173,20 +173,22 @@ function ScreeningPage() {
                 <div className="bg-white p-4 rounded-xl shadow-md flex items-center justify-between"><span className="text-gray-600">Rejected</span><span className="font-bold text-2xl text-red-600">{summary.rejected_count}</span></div>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow-md mb-6">
-                <h3 className="font-bold text-lg text-gray-800 mb-4">Rejection Reasons</h3>
-                <div className="space-y-3">
-                  {Object.entries(summary.rejection_details).map(([reason, count]) => (
-                    <div key={reason} className="flex justify-between items-center p-4 bg-red-50 border-l-4 border-red-500 rounded">
-                      <span className="font-medium text-red-800">🔺 {reason}</span>
-                      <span className="font-bold text-sm text-red-700 bg-red-200 py-1 px-3 rounded-full">{count} {count > 1 ? 'candidates' : 'candidate'}</span>
-                    </div>
-                  ))}
+              {summary.rejected_count > 0 && (
+                <div className="bg-white p-6 rounded-xl shadow-md mb-6">
+                  <h3 className="font-bold text-lg text-gray-800 mb-4">Rejection Reasons</h3>
+                  <div className="space-y-3">
+                    {Object.entries(summary.rejection_details).map(([reason, count]) => (
+                      <div key={reason} className="flex justify-between items-center p-4 bg-red-50 border-l-4 border-red-500 rounded">
+                        <span className="font-medium text-red-800">🔺 {reason}</span>
+                        <span className="font-bold text-sm text-red-700 bg-red-200 py-1 px-3 rounded-full">{count} {count > 1 ? 'candidates' : 'candidate'}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex justify-end gap-4">
-                <button className="px-5 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300">Export Report</button>
+                {/* <button className="px-5 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300">Export Report</button> */}
                 <button
                   className="px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
                   onClick={handleViewQualified}
