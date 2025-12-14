@@ -1430,7 +1430,7 @@ function FillData({ template, onComplete, onBack, initialData }) {
               </div>
 
               {/* Grid Container (Action Cards) */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 max-w-4xl mx-auto">
   
               {/* Compact Download PDF Card */}
               <div className="group border border-blue-100 rounded-xl p-4 bg-white hover:border-blue-300 hover:shadow-md transition-all duration-200">
@@ -1447,24 +1447,6 @@ function FillData({ template, onComplete, onBack, initialData }) {
                     className="w-full py-2 px-4 bg-blue-600 text-white text-xs rounded-lg font-bold hover:bg-blue-700 transition shadow-sm disabled:opacity-50"
                   >
                     {isGeneratingPDF ? "Generating..." : pdfUrl ? "Download" : "Generate"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Compact Save CV Card */}
-              <div className="group border border-green-100 rounded-xl p-4 bg-white hover:border-green-300 hover:shadow-md transition-all duration-200">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                    </svg>
-                  </div>
-                  <h4 className="text-sm font-bold text-gray-700 mb-3">Save to My CVs</h4>
-                  <button
-                    onClick={handleSaveCV}
-                    className="w-full py-2 px-4 bg-green-600 text-white text-xs rounded-lg font-bold hover:bg-green-700 transition shadow-sm"
-                  >
-                    Save CV
                   </button>
                 </div>
               </div>
