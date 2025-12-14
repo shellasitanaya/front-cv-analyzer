@@ -126,7 +126,9 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <p className="text-sm text-blue-600 mb-6 cursor-pointer">Forgot Password?</p>
+          <p className="text-sm mb-6 cursor-pointer">Don't have an account yet? 
+            <span className="font-semibold text-blue-400 cursor-pointer"
+            onClick={() => navigate("/register")}> Register</span></p>
 
           <button
             className="w-full py-3 bg-[#94B0DA] text-white rounded-lg shadow-md hover:bg-[#8F91A2] transition font-semibold mb-4"
