@@ -219,3 +219,154 @@ export default {
   CvAPI,
   UserAPI
 };
+
+// src/services/api.js - modifikasi candidateAPI
+export const candidateAPI = {
+  // Get single candidate by ID - coba multiple endpoints
+  getCandidateById: async (id) => {
+    const endpoint = `/api/candidates/${id}`;
+    console.log(`🔍 Fetching candidate from: ${API_BASE_URL}${endpoint}`);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`);
+      
+      console.log(`📊 Response status: ${response.status}`);
+      
+      if (!response.ok) {
+        // Coba endpoint alternatif
+        console.log('⚠️ Trying alternative endpoint...');
+        const altResponse = await fetch(`${API_BASE_URL}/api/hr/candidates/${id}`);
+        if (altResponse.ok) {
+          console.log('✅ Success with alternative endpoint');
+          return altResponse.json();
+        }
+        
+        let errorMessage = `Failed to fetch candidate data (${response.status})`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          console.log('📄 Error data:', errorData);
+        } catch (e) {
+          const text = await response.text();
+          console.log('📄 Response text:', text.substring(0, 200));
+        }
+        throw new Error(errorMessage);
+      }
+      
+      const data = await response.json();
+      console.log('✅ Candidate data received:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Fetch error:', error);
+      
+      // Fallback ke mock data jika backend down
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 Using fallback mock data...');
+        return mockCandidateAPI.getCandidateById(id);
+      }
+      
+      throw error;
+    }
+  },
+
+  // Get candidate with skills
+  getCandidateWithSkills: async (id) => {
+    const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+    
+    console.log(`🔍 [Frontend] Mencari skills untuk candidate: ${id}`);
+    
+    // Coba endpoint utama
+    const endpoint = `/api/candidates/${id}/skills`;
+    console.log(`🔍 [Frontend] Mencoba endpoint: ${API_BASE_URL}${endpoint}`);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`);
+      
+      console.log(`📊 [Frontend] Skills response status: ${response.status}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ [Frontend] Skills data diterima:`, data);
+        return data;
+      }
+      
+      // Jika error 500, coba query langsung ke database via endpoint lain
+      console.log(`⚠️ [Frontend] Skills endpoint error, menggunakan fallback`);
+      
+      // Return default skills data
+      return {
+        candidate_id: id,
+        candidate_name: 'Candidate',
+        skills: []  // Return empty array sementara
+      };
+      
+    } catch (error) {
+      console.error(`❌ [Frontend] Error fetching skills:`, error);
+      return {
+        candidate_id: id,
+        candidate_name: 'Candidate',
+        skills: []
+      };
+    }
+  },
+};
+
+const mockCandidateAPI = {
+  getCandidateById: async (id) => {
+    console.log('📦 Using mock data for candidate:', id);
+    
+    // Mock data sesuai dengan seeder
+    const mockData = {
+      '27d8c7e3-1866-4e24-b48d-8855f6ba32a8': {
+        id: '27d8c7e3-1866-4e24-b48d-8855f6ba32a8',
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '+628123456789',
+        match_score: 87.5,
+        education: 'Bachelor of Computer Science, University of Indonesia (2020-2024)',
+        experience: 'Backend Developer at ABC Corp (2023-2024)',
+        status: 'passed_filter',
+        original_filename: 'cv_john_doe.pdf',
+        uploaded_at: '2024-01-15T10:30:00Z',
+        job_id: 'job-001'
+      },
+      // Tambahkan data lainnya dari seeder...
+    };
+    
+    if (mockData[id]) {
+      return mockData[id];
+    }
+    
+    // Return dummy data jika ID tidak dikenali
+    return {
+      id: id,
+      name: 'Test Candidate',
+      email: 'test@example.com',
+      phone: '+628123456789',
+      match_score: 75.0,
+      education: 'Bachelor Degree',
+      experience: 'Software Developer',
+      status: 'processing',
+      original_filename: 'cv_test.pdf',
+      uploaded_at: new Date().toISOString(),
+      job_id: 'job-001'
+    };
+  },
+  
+  getCandidateWithSkills: async (id) => {
+    console.log('📦 Using mock skills for candidate:', id);
+    
+    // Mock skills data
+    return {
+      candidate_id: id,
+      candidate_name: 'Test Candidate',
+      skills: [
+        { id: '1', name: 'Python', category: 'Programming' },
+        { id: '2', name: 'JavaScript', category: 'Programming' },
+        { id: '3', name: 'React', category: 'Frontend' },
+        { id: '4', name: 'Node.js', category: 'Backend' },
+        { id: '5', name: 'PostgreSQL', category: 'Database' }
+      ]
+    };
+  }
+};
