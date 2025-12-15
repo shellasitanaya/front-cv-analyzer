@@ -1,9 +1,10 @@
-// FillData.jsx - VERSI LENGKAP DENGAN VALIDASI PERSONAL INFO (STEP 1)
-import React, { useState, useCallback } from "react";
+// FillData.jsx - VERSI ASLI DENGAN FIX LOAD DATA
+import React, { useState, useCallback, useEffect } from "react"; // Tambah useEffect
 import axios from "axios";
 import LivePreview from "./LivePreview";
 
-function FillData({ template, onComplete, onBack }) {
+// 1. Tambah prop 'initialData'
+function FillData({ template, onComplete, onBack, initialData }) {
   // --- CONFIGURATION ---
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const currentYear = new Date().getFullYear();
@@ -53,6 +54,70 @@ function FillData({ template, onComplete, onBack }) {
       elaboration: "" 
     }],
   });
+
+  // --- 2. TAMBAHAN: USE EFFECT UNTUK LOAD DATA ---
+  // Ini logika agar data tidak kosong (hanya nama) saat diload
+  useEffect(() => {
+    if (initialData) {
+    console.log("🔄 Injecting Data to Form:", initialData);
+    
+    // 1. Cek apakah data terbungkus dalam properti '.data' (Smart Unwrapping)
+    // Ini menangani kasus jika struktur simpanan berbeda
+    let source = initialData;
+    if (initialData.data && typeof initialData.data === 'object' && !Array.isArray(initialData.data)) {
+        source = initialData.data;
+    }
+
+    // 2. Siapkan data array (agar tidak error jika kosong)
+    const rawExp = source.experience || source.work_experience || [];
+    const rawEdu = source.education || [];
+    const rawSkills = source.skills || [];
+
+    // 3. Masukkan ke State Form
+    setFormData(prev => ({
+      ...prev,
+      // Mapping String (dengan pengecekan variasi nama key)
+      name: source.name || source.extracted_name || initialData.name || "",
+      email: source.email || "",
+      phone: source.phone || "",
+      linkedin: source.linkedin || source.linkedin_url || "", 
+      portfolio: source.portfolio || source.portfolio_url || "",
+      summary: source.summary || "",
+
+      // Mapping Array: Experience
+      experience: Array.isArray(rawExp) && rawExp.length > 0 
+        ? rawExp.map(exp => ({
+            job_title: exp.job_title || "",
+            company_name: exp.company_name || exp.company || "", 
+            start_date: exp.start_date || "",
+            end_date: exp.end_date || "",
+            description: exp.description || ""
+          }))
+        : [{ job_title: "", company_name: "", start_date: "", end_date: "", description: "" }], // Default jika kosong
+
+      // Mapping Array: Education
+      education: Array.isArray(rawEdu) && rawEdu.length > 0
+        ? rawEdu.map(edu => ({
+            degree: edu.degree || "",
+            university: edu.university || "",
+            graduation_year: edu.graduation_year || "",
+            major: edu.major || "",
+            gpa: edu.gpa || "",
+            gpa_max: edu.gpa_max || "4.00"
+          }))
+        : [{ degree: "", university: "", graduation_year: "", major: "", gpa: "", gpa_max: "4.00" }],
+
+      // Mapping Array: Skills
+      skills: Array.isArray(rawSkills) && rawSkills.length > 0
+        ? rawSkills.map(skill => ({
+            name: skill.name || "",
+            year: skill.year || "",
+            elaboration: skill.elaboration || ""
+          }))
+        : [{ name: "", year: "", elaboration: "" }]
+    }));
+  }
+}, [initialData]);
 
   // --- HELPER DATE ---
   const parseDate = (dateString) => {
@@ -444,7 +509,7 @@ function FillData({ template, onComplete, onBack }) {
       }));
     }
   }, [formData.experience]);
-  
+   
   // --- VALIDATION LOGIC (UPDATED STEP 1) ---
   const validateStep = (step) => {
     const newErrors = {};
@@ -1365,7 +1430,7 @@ function FillData({ template, onComplete, onBack }) {
               </div>
 
               {/* Grid Container (Action Cards) */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 max-w-4xl mx-auto">
   
               {/* Compact Download PDF Card */}
               <div className="group border border-blue-100 rounded-xl p-4 bg-white hover:border-blue-300 hover:shadow-md transition-all duration-200">
@@ -1382,24 +1447,6 @@ function FillData({ template, onComplete, onBack }) {
                     className="w-full py-2 px-4 bg-blue-600 text-white text-xs rounded-lg font-bold hover:bg-blue-700 transition shadow-sm disabled:opacity-50"
                   >
                     {isGeneratingPDF ? "Generating..." : pdfUrl ? "Download" : "Generate"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Compact Save CV Card */}
-              <div className="group border border-green-100 rounded-xl p-4 bg-white hover:border-green-300 hover:shadow-md transition-all duration-200">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                    </svg>
-                  </div>
-                  <h4 className="text-sm font-bold text-gray-700 mb-3">Save to My CVs</h4>
-                  <button
-                    onClick={handleSaveCV}
-                    className="w-full py-2 px-4 bg-green-600 text-white text-xs rounded-lg font-bold hover:bg-green-700 transition shadow-sm"
-                  >
-                    Save CV
                   </button>
                 </div>
               </div>

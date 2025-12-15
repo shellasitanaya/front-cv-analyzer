@@ -47,13 +47,10 @@ function MyCVsSection() {
     }
   };
 
-  // --- LOGIKA BARU: PREVIEW FILE ---
   const handlePreviewCV = async (cvId) => {
     try {
-      // Ambil token dari localStorage (sesuaikan key-nya jika beda, misal 'accessToken')
       const token = localStorage.getItem('token'); 
-      
-      // GANTI URL INI sesuai backend Anda jika sudah di-hosting
+      // Pastikan URL backend sesuai port Anda (misal 5000)
       const response = await fetch(`http://localhost:5000/api/jobseeker/cv/preview/${cvId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -62,11 +59,8 @@ function MyCVsSection() {
 
       if (!response.ok) throw new Error('Failed to fetch file');
 
-      // Buat Blob URL dari response
       const blob = await response.blob();
       const fileUrl = window.URL.createObjectURL(blob);
-      
-      // Buka di tab baru
       window.open(fileUrl, '_blank');
       
     } catch (error) {
@@ -74,7 +68,6 @@ function MyCVsSection() {
       alert("Gagal membuka file. File mungkin sudah dihapus atau format tidak didukung browser.");
     }
   };
-  // ---------------------------------
 
   useEffect(() => { loadMyCVs(); }, []);
 
@@ -84,7 +77,17 @@ function MyCVsSection() {
     return { bar: 'bg-red-500', badge: 'bg-red-100 text-red-700 border-red-200' };
   };
 
-  // --- LOGIKA PAGINATION ---
+  // --- [FIX] Helper Timezone ---
+  // Fungsi ini memaksa string tanggal dianggap sebagai UTC ('Z')
+  // sehingga browser otomatis mengkonversinya ke waktu lokal (WIB)
+  const getLocalDate = (dateString) => {
+    if (!dateString) return new Date();
+    // Jika string dari backend tidak ada 'Z' di akhir, kita tambahkan manual
+    const utcString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+    return new Date(utcString);
+  };
+
+  // --- Pagination Logic ---
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = cvs.slice(indexOfFirstItem, indexOfLastItem);
@@ -141,6 +144,9 @@ function MyCVsSection() {
               currentItems.map((cv) => {
                 const score = cv.latest_analysis ? cv.latest_analysis.match_score : 0;
                 const styles = getScoreStyles(score);
+                
+                // [FIX] Gunakan helper getLocalDate di sini
+                const dateObj = getLocalDate(cv.uploaded_at);
 
                 return (
                   <tr key={cv.cv_id} className="hover:bg-[#F8FAFF] transition-colors group">
@@ -162,13 +168,13 @@ function MyCVsSection() {
                       </div>
                     </td>
 
-                    {/* Date */}
+                    {/* Date [FIXED] */}
                     <td className="p-6 whitespace-nowrap">
                       <div className="text-sm font-medium text-slate-600">
-                        {new Date(cv.uploaded_at).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {dateObj.toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
                       </div>
                       <div className="text-[10px] text-slate-400 mt-0.5">
-                        {new Date(cv.uploaded_at).toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' })}
+                        {dateObj.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </td>
 
@@ -198,7 +204,6 @@ function MyCVsSection() {
                     {/* Actions */}
                     <td className="p-6 pr-8 text-right">
                       <div className="flex justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                        {/* Tombol VIEW FILE (Baru) */}
                         <button
                           onClick={() => handlePreviewCV(cv.cv_id)}
                           className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 bg-white border border-gray-200 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-300 transition-all shadow-sm"
@@ -207,7 +212,6 @@ function MyCVsSection() {
                           📄
                         </button>
 
-                        {/* Tombol VIEW ANALYSIS */}
                         <button
                           onClick={() => handleViewAnalysis(cv.latest_analysis?.analysis_id)}
                           className="w-8 h-8 flex items-center justify-center rounded-lg text-[#94B0DA] bg-[#F0F7FF] hover:bg-[#94B0DA] hover:text-white transition-all shadow-sm border border-transparent hover:border-[#94B0DA]"
@@ -216,7 +220,6 @@ function MyCVsSection() {
                           👁️
                         </button>
 
-                        {/* Tombol DELETE */}
                         <button
                           onClick={() => handleDeleteCV(cv.cv_id)}
                           className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 bg-white border border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all shadow-sm"
