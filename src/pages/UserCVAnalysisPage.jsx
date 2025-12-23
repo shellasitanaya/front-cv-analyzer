@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 
 // Import fitur Analisis
 import CVUploadSection from '../features/user/CVUploadSection'; 
+import MyCVsSection from '../features/user/MyCVsSection'; 
 import AnalysisSummary from '../features/user/AnalysisSummary'; 
 import ImprovementSuggestions from '../features/user/ImprovementSuggestions';
 
@@ -96,9 +97,8 @@ function UserCVAnalysisPage() {
     setCvStep('fill-data');
   };
 
-  // --- HANDLER SAVE (Simpan logic dummy atau simpan ke localstorage tanpa list UI) ---
+  // --- HANDLER SAVE (Opsional: Simpan ke localStorage tanpa menampilkan list) ---
   const handleSaveGeneratedCV = (cvData) => {
-    // Kita tetap simpan ke localStorage agar tidak error, tapi tidak menampilkan listnya
     const newCV = {
       id: Date.now(),
       name: cvData.name || 'Untitled CV',
@@ -107,6 +107,7 @@ function UserCVAnalysisPage() {
       data: cvData
     };
 
+    // Tetap simpan ke storage agar data aman, tapi tidak ditampilkan di list
     const savedCVs = JSON.parse(localStorage.getItem('generatedCVs') || '[]');
     savedCVs.unshift(newCV);
     localStorage.setItem('generatedCVs', JSON.stringify(savedCVs));
@@ -114,8 +115,16 @@ function UserCVAnalysisPage() {
     alert("CV Saved Successfully!");
   };
 
+  // Handler dummy untuk navbar (karena fitur load sudah dihapus)
+  const handleNavbarMyResumesClick = () => {
+    setActiveTab('generate');
+  };
+
   return (
-    <Layout activeFeature={activeTab}>
+    <Layout 
+      activeFeature={activeTab}
+      onMyResumesClick={handleNavbarMyResumesClick}
+    >
       <div className="flex flex-col h-full w-full overflow-hidden">
         
         {/* FIXED NAVBAR TABS */}
@@ -175,6 +184,10 @@ function UserCVAnalysisPage() {
                     )}
                   </div>
                 )}
+
+                <div id="history-section">
+                  <MyCVsSection key={refreshTrigger} />
+                </div>
               </div>
             </div>
           )}
