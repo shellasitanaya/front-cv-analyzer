@@ -266,9 +266,9 @@ const CandidateProfile = () => {
                 />
                 <h1 className="text-2xl font-bold text-gray-800 mt-4">{candidate.name}</h1>
                 <div className="flex items-center justify-center gap-2 mt-2">
-                  {/* <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
+                  <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
                     {candidate.match_score || 0}% Match
-                  </span> */}
+                  </span>
                   <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
                     candidate.status === 'passed_filter' 
                       ? 'bg-green-100 text-green-800'
@@ -328,7 +328,13 @@ const CandidateProfile = () => {
                   Download CV
                 </button>
                 
-          
+                <button
+                  onClick={handleContact}
+                  className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                >
+                  <Mail size={18} />
+                  Contact Candidate
+                </button>
                 
               </div>
             </div>
@@ -403,8 +409,8 @@ const CandidateProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <div>
-                    {/* <p className="text-sm text-gray-500">Match Score</p> */}
-                    {/* <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-500">Match Score</p>
+                    <div className="flex items-center gap-2">
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div 
                           className="bg-green-600 h-3 rounded-full"
@@ -412,7 +418,7 @@ const CandidateProfile = () => {
                         ></div>
                       </div>
                       <span className="font-bold text-gray-800">{candidate.match_score || 0}%</span>
-                    </div> */}
+                    </div>
                   </div>
                   
                   <div>
