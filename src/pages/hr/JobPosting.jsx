@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import Layout from "../../components/Layout";
 
 export default function CreateJobPosting() {
   const navigate = useNavigate();
@@ -57,9 +58,15 @@ export default function CreateJobPosting() {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 p-8">
+    <Layout>
+    <div className="min-h-screen p-8">
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">Job Posting</h1>
+        <p className="text-gray-600 mt-1">Create job postings and define criteria for automated candidate screening</p>
+      </div>
+        
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-2xl p-8 space-y-8">
-        <h1 className="text-2xl font-semibold text-gray-700">Create Job Posting</h1>
+        <h1 className="text-2xl font-semibold text-gray-700">Create New Job</h1>
 
         {/* Job Details */}
         <section className="space-y-4">
@@ -217,5 +224,6 @@ export default function CreateJobPosting() {
         </div>
       </div>
     </div>
+    </Layout>
   );
 }

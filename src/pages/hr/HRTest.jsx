@@ -13,7 +13,7 @@ export default function HRTest() {
               HR Candidate Search
             </h1>
             <p className="text-[#505A5B] text-lg">
-              Temukan kandidat terbaik berdasarkan skill, pengalaman, dan nilai kecocokan.
+              Find the best candidates based on skills, experience, and fit values.
             </p>
           </div>
 

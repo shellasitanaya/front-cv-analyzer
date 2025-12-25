@@ -121,7 +121,7 @@ export default function Layout({ children, activeFeature = 'analyze' }) {
       </aside>
 
       <main className="flex-1 ml-64 p-8">
-        <div className="flex justify-between items-center mb-10 sticky top-0 bg-[#F8FAFF]/90 backdrop-blur-sm z-10 py-4">
+        <div className="flex justify-between items-center mb-10 sticky top-0 backdrop-blur-sm z-10 py-4">
           <div>
             <h2 className="text-2xl font-bold text-[#343F3E]">
               {activeFeature === 'generate' ? 'CV Builder' : 'Dashboard'}
